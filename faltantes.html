@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Faltantes Jueves</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark px-3">
+    <span class="navbar-brand">MONBLEU – Faltantes</span>
+    <div>
+        <a href="/" class="btn btn-outline-light btn-sm me-2">Book Stock</a>
+        <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+<table class="table table-bordered table-sm">
+    <thead class="table-dark">
+    <tr>
+        <th>Producto</th>
+        <th>CH</th>
+        <th>M</th>
+        <th>L</th>
+        <th>XL</th>
+        <th>Guardar</th>
+    </tr>
+    </thead>
+
+    {% for f in data %}
+    <tr>
+        <form method="post" action="/faltantes/editar/{{ f.id }}">
+            <td>{{ f.producto }}</td>
+            <td><input class="form-control form-control-sm" name="ch" value="{{ f.ch }}"></td>
+            <td><input class="form-control form-control-sm" name="m" value="{{ f.m }}"></td>
+            <td><input class="form-control form-control-sm" name="l" value="{{ f.l }}"></td>
+            <td><input class="form-control form-control-sm" name="xl" value="{{ f.xl }}"></td>
+            <td>
+                <button class="btn btn-sm btn-primary">Guardar</button>
+            </td>
+        </form>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+</body>
+</html>
