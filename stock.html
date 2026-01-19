@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Stock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark px-3">
+    <span class="navbar-brand">MONBLEU – Book Stock</span>
+    <div>
+        <a href="/faltantes" class="btn btn-outline-light btn-sm me-2">Faltantes</a>
+        <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+<table class="table table-bordered table-sm">
+    <thead class="table-dark">
+    <tr>
+        <th>Producto</th>
+        <th>Talla</th>
+        <th>Stock</th>
+        <th>Mínimos</th>
+        <th>Orden Compra</th>
+        <th>Guardar</th>
+    </tr>
+    </thead>
+
+    {% for i in data %}
+    <tr>
+        <form method="post" action="/book_stock/editar/{{ i.id }}">
+            <td>{{ i.producto }}</td>
+            <td>{{ i.talla }}</td>
+            <td><input class="form-control form-control-sm" name="stock" value="{{ i.stock }}"></td>
+            <td><input class="form-control form-control-sm" name="minimos" value="{{ i.minimos }}"></td>
+            <td><input class="form-control form-control-sm" name="orden_compra" value="{{ i.orden_compra }}"></td>
+            <td>
+                <button class="btn btn-sm btn-primary">Guardar</button>
+            </td>
+        </form>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+</body>
+</html>
