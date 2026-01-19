@@ -75,14 +75,8 @@ def login():
             return redirect(url_for('book_stock'))
 
         flash('Credenciales incorrectas', 'danger')
-
     return render_template('login.html')
 
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
 
 # ================== BOOK STOCK ==================
 @app.route('/')
