@@ -64,8 +64,8 @@ class FaltantesJueves(db.Model):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        usuario = request.form['taller']
-        password = request.form['1234']
+        usuario = request.form['usuario']
+        password = request.form['password']
 
         user = Usuario.query.filter_by(usuario=usuario).first()
         if user and user.check_password(password):
@@ -75,7 +75,9 @@ def login():
             return redirect(url_for('book_stock'))
 
         flash('Credenciales incorrectas', 'danger')
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
