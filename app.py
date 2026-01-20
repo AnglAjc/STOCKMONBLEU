@@ -125,6 +125,28 @@ def book_stock():
     data = BookStock.query.order_by(BookStock.producto).all()
     return render_template('stock.html', data=data, color_stock=color_stock)
 
+# ================== EDITAR STOCK ==================
+@app.route('/book_stock/editar/<int:id>', methods=['POST'])
+@login_required
+@rol_required('admin')
+def editar_book_stock(id):
+    item = BookStock.query.get_or_404(id)
+
+    try:
+        item.stock = int(request.form['stock'])
+        item.minimos = int(request.form['minimos'])
+        item.orden_compra = int(request.form['orden_compra'])
+
+        db.session.commit()
+        flash('Registro actualizado', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al guardar: {e}', 'danger')
+
+    return redirect(url_for('book_stock'))
+
+
 # ================== TALLER ==================
 @app.route('/taller', methods=['GET', 'POST'])
 @login_required
