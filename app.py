@@ -85,13 +85,14 @@ class OrdenCompra(db.Model):
 
 # ================== HELPERS ==================
 def color_stock(stock, minimo, orden):
-    if minimo is None or orden is None:
+    if minimo is None:
         return 'verde'
-    if stock <= minimo:
+    if stock < minimo:
         return 'rojo'
-    elif stock < orden:
+    if orden is not None and stock < orden:
         return 'amarillo'
     return 'verde'
+
 
 
 
