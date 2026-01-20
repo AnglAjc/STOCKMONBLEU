@@ -171,6 +171,16 @@ def admin():
     data = OrdenCompra.query.all()
     return render_template('admin.html', data=data)
 
+# ================== SYNC MANUAL ==================
+@app.route('/sync')
+@login_required
+@rol_required('admin')
+def sync_manual():
+    os.system('python sync.py')
+    flash('Sincronización completada correctamente', 'success')
+    return redirect(url_for('admin'))
+
+
 # ================== AUMENTAR MINIMOS ==================
 @app.route('/aumentar-minimos')
 @login_required
