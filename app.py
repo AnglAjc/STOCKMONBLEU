@@ -172,12 +172,21 @@ def admin():
     return render_template('admin.html', data=data)
 
 # ================== SYNC MANUAL ==================
+import subprocess
+
 @app.route('/sync')
 @login_required
 @rol_required('admin')
 def sync_manual():
-    os.system('python sync.py')
-    flash('Sincronización completada correctamente', 'success')
+    try:
+        subprocess.run(
+            ['python3', 'sync.py'],
+            check=True
+        )
+        flash('Sincronización completada correctamente', 'success')
+    except Exception as e:
+        flash(f'Error en sync: {e}', 'danger')
+
     return redirect(url_for('admin'))
 
 
