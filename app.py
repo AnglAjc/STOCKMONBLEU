@@ -65,23 +65,23 @@ class BookStock(db.Model):
 class Entrada(db.Model):
     __tablename__ = 'entradas'
     id = db.Column(db.Integer, primary_key=True)
-    producto = db.Column(db.String(100))
-    talla = db.Column(db.String(10))
-    cantidad = db.Column(db.Integer)
+    producto = db.Column(db.String(100), nullable=False)
+    talla = db.Column(db.String(10), nullable=True)   # 👈 CAMBIO
+    cantidad = db.Column(db.Integer, nullable=False)
 
 class Salida(db.Model):
     __tablename__ = 'salidas'
     id = db.Column(db.Integer, primary_key=True)
-    producto = db.Column(db.String(100))
-    talla = db.Column(db.String(10))
-    cantidad = db.Column(db.Integer)
+     producto = db.Column(db.String(100), nullable=False)
+    talla = db.Column(db.String(10), nullable=True)   # 👈 CAMBIO
+    cantidad = db.Column(db.Integer, nullable=False)
 
 class OrdenCompra(db.Model):
     __tablename__ = 'orden_compra'
     id = db.Column(db.Integer, primary_key=True)
-    producto = db.Column(db.String(100))
-    talla = db.Column(db.String(10))
-    nueva_orden_compra = db.Column(db.Integer)
+     producto = db.Column(db.String(100), nullable=False)
+    talla = db.Column(db.String(10), nullable=True)   # 👈 CAMBIO
+    cantidad = db.Column(db.Integer, nullable=False)
 
 # ================== HELPERS ==================
 def color_stock(stock, minimo, orden):
