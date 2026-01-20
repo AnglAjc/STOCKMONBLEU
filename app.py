@@ -12,11 +12,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL',
     'postgresql://neondb_owner:npg_WJpEv58mZdzT@ep-billowing-mountain-ahvp3wat-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require'
 )
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
-# ================== AUTH ==================
+# ================== DECORADORES ==================
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -25,20 +25,30 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def rol_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if session.get('rol') not in roles:
+                flash('Acceso no autorizado', 'danger')
+                return redirect(url_for('book_stock'))
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
 # ================== MODELOS ==================
 class Usuario(db.Model):
     __tablename__ = 'usuario'
     id = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    rol = db.Column(db.String(20), nullable=False)  # taller | maquila
+    rol = db.Column(db.String(20), nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
 
 class BookStock(db.Model):
     __tablename__ = 'book_stock'
@@ -47,18 +57,37 @@ class BookStock(db.Model):
     producto = db.Column(db.String(100))
     talla = db.Column(db.String(10))
     stock = db.Column(db.Integer)
-    minimos = db.Column(db.Integer, nullable=True)
-    orden_compra = db.Column(db.String(50), nullable=True)
+    minimos = db.Column(db.Integer)
+    orden_compra = db.Column(db.Integer)
 
-
-class FaltantesJueves(db.Model):
-    __tablename__ = 'faltantes_jueves'
+class Entrada(db.Model):
+    __tablename__ = 'entradas'
     id = db.Column(db.Integer, primary_key=True)
     producto = db.Column(db.String(100))
-    ch = db.Column(db.Integer, nullable=True)
-    m = db.Column(db.Integer, nullable=True)
-    l = db.Column(db.Integer, nullable=True)
-    xl = db.Column(db.Integer, nullable=True)
+    talla = db.Column(db.String(10))
+    cantidad = db.Column(db.Integer)
+
+class Salida(db.Model):
+    __tablename__ = 'salidas'
+    id = db.Column(db.Integer, primary_key=True)
+    producto = db.Column(db.String(100))
+    talla = db.Column(db.String(10))
+    cantidad = db.Column(db.Integer)
+
+class OrdenCompra(db.Model):
+    __tablename__ = 'orden_compra'
+    id = db.Column(db.Integer, primary_key=True)
+    producto = db.Column(db.String(100))
+    talla = db.Column(db.String(10))
+    nueva_orden_compra = db.Column(db.Integer)
+
+# ================== HELPERS ==================
+def color_stock(stock, minimo, orden):
+    if stock < minimo:
+        return 'rojo'
+    elif stock < orden:
+        return 'amarillo'
+    return 'verde'
 
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET', 'POST'])
@@ -80,67 +109,97 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('Sesión cerrada exitosamente', 'info')
     return redirect(url_for('login'))
 
-
-# ================== BOOK STOCK ==================
+# ================== STOCK GENERAL ==================
 @app.route('/')
 @login_required
 def book_stock():
     data = BookStock.query.order_by(BookStock.producto).all()
-    return render_template('stock.html', data=data)
+    return render_template('stock.html', data=data, color_stock=color_stock)
 
-@app.route('/book_stock/editar/<int:id>', methods=['POST'])
+# ================== TALLER ==================
+@app.route('/taller', methods=['GET', 'POST'])
 @login_required
-def editar_book_stock(id):
-    item = BookStock.query.get_or_404(id)
-    item.stock = request.form['stock']
-    item.minimos = request.form['minimos'] or None
-    item.orden_compra = request.form['orden_compra'] or None
+@rol_required('taller')
+def taller():
+    if request.method == 'POST':
+        item = BookStock.query.get(request.form['id'])
+        cantidad = int(request.form['cantidad'])
+
+        item.stock -= cantidad
+        db.session.add(Salida(
+            producto=item.producto,
+            talla=item.talla,
+            cantidad=cantidad
+        ))
+        db.session.commit()
+
+    data = BookStock.query.order_by(BookStock.producto).all()
+    return render_template('taller.html', data=data)
+
+# ================== MAQUILA ==================
+@app.route('/maquila', methods=['GET', 'POST'])
+@login_required
+@rol_required('maquila')
+def maquila():
+    if request.method == 'POST':
+        item = BookStock.query.get(request.form['id'])
+        cantidad = int(request.form['cantidad'])
+
+        item.stock += cantidad
+        db.session.add(Entrada(
+            producto=item.producto,
+            talla=item.talla,
+            cantidad=cantidad
+        ))
+        db.session.commit()
+
+    data = BookStock.query.order_by(BookStock.producto).all()
+    return render_template('maquila.html', data=data)
+
+# ================== ADMIN ==================
+@app.route('/admin', methods=['GET', 'POST'])
+@login_required
+@rol_required('admin')
+def admin():
+    if request.method == 'POST':
+        oc = OrdenCompra.query.get(request.form['id'])
+        oc.nueva_orden_compra = int(request.form['nueva'])
+        db.session.commit()
+
+    data = OrdenCompra.query.all()
+    return render_template('admin.html', data=data)
+
+# ================== AUMENTAR MINIMOS ==================
+@app.route('/aumentar-minimos')
+@login_required
+@rol_required('admin')
+def aumentar_minimos():
+    for item in BookStock.query.all():
+        item.minimos += 2
     db.session.commit()
+    flash('Mínimos aumentados', 'success')
     return redirect(url_for('book_stock'))
 
-# ================== FALTANTES ==================
-@app.route('/faltantes')
-@login_required
-def faltantes():
-    data = FaltantesJueves.query.order_by(FaltantesJueves.producto).all()
-    return render_template('faltantes.html', data=data)
-
-@app.route('/faltantes/editar/<int:id>', methods=['POST'])
-@login_required
-def editar_faltantes(id):
-    f = FaltantesJueves.query.get_or_404(id)
-    f.ch = request.form['ch'] or None
-    f.m = request.form['m'] or None
-    f.l = request.form['l'] or None
-    f.xl = request.form['xl'] or None
-    db.session.commit()
-    return redirect(url_for('faltantes'))
-
-# ================== INIT DB ==================
+# ================== INIT ==================
 @app.route('/init-db')
 def init_db():
     db.create_all()
-    return 'Tablas creadas correctamente'
+    return 'Tablas creadas'
 
 @app.route('/crear-usuarios')
 def crear_usuarios():
     if Usuario.query.first():
         return 'Usuarios ya existen'
 
-    taller = Usuario(usuario='taller', rol='taller')
-    taller.set_password('1234')
+    for u, r in [('taller','taller'), ('maquila','maquila'), ('admin','admin')]:
+        user = Usuario(usuario=u, rol=r)
+        user.set_password('1234')
+        db.session.add(user)
 
-    maquila = Usuario(usuario='maquila', rol='maquila')
-    maquila.set_password('1234')
-
-    db.session.add_all([taller, maquila])
     db.session.commit()
+    return 'Usuarios creados'
 
-    return 'Usuarios creados: taller / maquila (password: 1234)'
-
-# ================== MAIN ==================
 if __name__ == '__main__':
     app.run(debug=True)
