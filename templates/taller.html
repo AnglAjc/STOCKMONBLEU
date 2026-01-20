@@ -1,0 +1,9 @@
+<h2>Taller - Salidas</h2>
+{% for i in data %}
+<form method="post">
+<input type="hidden" name="id" value="{{ i.id }}">
+{{ i.producto }} {{ i.talla }} ({{ i.stock }})
+<input name="cantidad" type="number">
+<button>Registrar salida</button>
+</form>
+{% endfor %}
