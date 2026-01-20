@@ -58,8 +58,8 @@ class BookStock(db.Model):
     talla = db.Column(db.String(10))
     stock = db.Column(db.Integer)
     minimos = db.Column(db.Integer)
-    orden_compra = db.Column(db.String(50))  # 👈 STRING
-Integer)
+    orden_compra = db.Column(db.String(50))
+
 
 class Entrada(db.Model):
     __tablename__ = 'entradas'
