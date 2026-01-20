@@ -1,0 +1,9 @@
+<h2>Administrador</h2>
+{% for i in data %}
+<form method="post">
+<input type="hidden" name="id" value="{{ i.id }}">
+{{ i.producto }} {{ i.talla }}
+<input name="nueva" value="{{ i.nueva_orden_compra }}">
+<button>Actualizar</button>
+</form>
+{% endfor %}
