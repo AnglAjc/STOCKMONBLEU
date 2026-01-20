@@ -84,11 +84,14 @@ class OrdenCompra(db.Model):
 
 # ================== HELPERS ==================
 def color_stock(stock, minimo, orden):
+    if minimo is None or orden is None:
+        return 'verde'
     if stock < minimo:
         return 'rojo'
     elif stock < orden:
         return 'amarillo'
     return 'verde'
+
 
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET', 'POST'])
