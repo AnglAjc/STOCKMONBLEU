@@ -58,7 +58,8 @@ class BookStock(db.Model):
     talla = db.Column(db.String(10))
     stock = db.Column(db.Integer)
     minimos = db.Column(db.Integer)
-    orden_compra = db.Column(db.String(50))
+    orden_compra = db.Column(db.Integer)   # 👈 CAMBIO CLAVE
+
 
 
 class Entrada(db.Model):
@@ -86,11 +87,12 @@ class OrdenCompra(db.Model):
 def color_stock(stock, minimo, orden):
     if minimo is None or orden is None:
         return 'verde'
-    if stock < minimo:
+    if stock <= minimo:
         return 'rojo'
     elif stock < orden:
         return 'amarillo'
     return 'verde'
+
 
 
 # ================== LOGIN ==================
