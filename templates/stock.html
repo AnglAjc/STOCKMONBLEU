@@ -51,13 +51,14 @@
             <td>{{ i.talla }}</td>
             <td><strong>{{ i.stock }}</strong></td>
             <td>{{ i.minimos }}</td>
-            <td>
-                {% if i.stock < i.minimos %}
-                    <span class="fw-bold text-danger">{{ i.orden_compra }}</span>
-                {% else %}
-                    <span class="text-success">Aún no</span>
-                {% endif %}
-            </td>
+          <td>
+    {% if i.minimos is not none and i.stock < i.minimos %}
+        <span class="fw-bold text-danger">{{ i.orden_compra }}</span>
+    {% else %}
+        <span class="text-success">Aún no</span>
+    {% endif %}
+</td>
+
         </tr>
     {% endfor %}
     </tbody>
