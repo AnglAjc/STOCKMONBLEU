@@ -1,9 +1,72 @@
-<h2>Maquila - Entradas</h2>
-{% for i in data %}
-<form method="post">
-<input type="hidden" name="id" value="{{ i.id }}">
-{{ i.producto }} {{ i.talla }} ({{ i.stock }})
-<input name="cantidad" type="number">
-<button>Registrar entrada</button>
-</form>
-{% endfor %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Maquila - Entradas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark px-3">
+    <span class="navbar-brand">MONBLEU – Maquila</span>
+    <div>
+        <a href="/" class="btn btn-outline-light btn-sm me-2">Stock</a>
+        <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+
+    <h4 class="mb-3">🏭 Registrar entradas (Órdenes pendientes)</h4>
+
+    {% if data|length == 0 %}
+        <div class="alert alert-success">
+            No hay órdenes de compra pendientes 🎉
+        </div>
+    {% else %}
+
+    <form method="post">
+
+        <table class="table table-bordered table-sm align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Producto</th>
+                    <th>Talla</th>
+                    <th>Stock actual</th>
+                    <th>Orden pendiente</th>
+                    <th>Entrada</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in data %}
+                <tr class="text-center">
+                    <td class="text-start">{{ i.producto }}</td>
+                    <td>{{ i.talla }}</td>
+                    <td>{{ i.stock }}</td>
+                    <td class="fw-bold text-warning">{{ i.orden_compra }}</td>
+                    <td>
+                        <input
+                            type="number"
+                            class="form-control form-control-sm text-center"
+                            name="entrada_{{ i.id }}"
+                            min="0"
+                            max="{{ i.orden_compra }}"
+                            placeholder="0"
+                        >
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button class="btn btn-success">
+            📥 Registrar entradas
+        </button>
+
+    </form>
+
+    {% endif %}
+</div>
+
+</body>
+</html>
