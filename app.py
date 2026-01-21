@@ -2,8 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from datetime import datetime
 import os
-import subprocess
 
 # ================== CONFIG ==================
 app = Flask(__name__)
@@ -39,7 +39,6 @@ def rol_required(*roles):
 
 # ================== MODELOS ==================
 class Usuario(db.Model):
-    __tablename__ = 'usuario'
     id = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -52,59 +51,34 @@ class Usuario(db.Model):
         return check_password_hash(self.password_hash, password)
 
 class BookStock(db.Model):
-    __tablename__ = 'book_stock'
     id = db.Column(db.Integer, primary_key=True)
     categoria = db.Column(db.String(50))
     producto = db.Column(db.String(100))
     talla = db.Column(db.String(10))
-    stock = db.Column(db.Integer)
-    minimos = db.Column(db.Integer)
-    orden_compra = db.Column(db.Integer)   # 👈 CAMBIO CLAVE
+    stock = db.Column(db.Integer, default=0)
+    minimos = db.Column(db.Integer, default=0)
+    orden_compra = db.Column(db.Integer, default=0)
 
 class Entrada(db.Model):
-    __tablename__ = 'entradas'
     id = db.Column(db.Integer, primary_key=True)
     producto = db.Column(db.String(100))
     talla = db.Column(db.String(10))
     cantidad = db.Column(db.Integer)
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Salida(db.Model):
-    __tablename__ = 'salidas'
     id = db.Column(db.Integer, primary_key=True)
     producto = db.Column(db.String(100))
     talla = db.Column(db.String(10))
     cantidad = db.Column(db.Integer)
-
-class OrdenCompra(db.Model):
-    __tablename__ = 'orden_compra'
-    id = db.Column(db.Integer, primary_key=True)
-    producto = db.Column(db.String(100))
-    talla = db.Column(db.String(10))
-    nueva_orden_compra = db.Column(db.Integer, default=0)
-
-# ================== HELPERS ==================
-def color_stock(stock, minimo, orden):
-    if minimo is None:
-        return 'verde'
-    try:
-        if stock < minimo:
-            return 'rojo'
-        if orden is not None and stock < orden:
-            return 'amarillo'
-    except TypeError:
-        # In case stock/minimo/orden are not comparable (None), fall back to green
-        return 'verde'
-    return 'verde'
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        usuario = request.form['usuario']
-        password = request.form['password']
-
-        user = Usuario.query.filter_by(usuario=usuario).first()
-        if user and user.check_password(password):
+        user = Usuario.query.filter_by(usuario=request.form['usuario']).first()
+        if user and user.check_password(request.form['password']):
             session['usuario_id'] = user.id
             session['usuario'] = user.usuario
             session['rol'] = user.rol
@@ -123,29 +97,34 @@ def logout():
 @login_required
 def book_stock():
     data = BookStock.query.order_by(BookStock.producto).all()
-    return render_template('stock.html', data=data, color_stock=color_stock)
+    return render_template('stock.html', data=data)
 
-# ================== EDITAR STOCK ==================
-@app.route('/book_stock/editar/<int:id>', methods=['POST'])
+# ================== ADMIN ==================
+@app.route('/admin', methods=['GET', 'POST'])
 @login_required
 @rol_required('admin')
-def editar_book_stock(id):
-    item = BookStock.query.get_or_404(id)
-
-    try:
-        item.stock = int(request.form.get('stock', item.stock or 0))
-        item.minimos = int(request.form.get('minimos', item.minimos or 0))
-        item.orden_compra = int(request.form.get('orden_compra', item.orden_compra or 0))
-
+def admin():
+    if request.method == 'POST':
+        for key, value in request.form.items():
+            if key.startswith('orden_'):
+                item_id = int(key.split('_')[1])
+                item = BookStock.query.get(item_id)
+                if item:
+                    item.orden_compra = int(value or 0)
         db.session.commit()
-        flash('Registro actualizado', 'success')
+        flash('Órdenes actualizadas', 'success')
 
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error al guardar: {e}', 'danger')
+    productos_bajo_minimo = BookStock.query.filter(
+        BookStock.stock < BookStock.minimos
+    ).order_by(BookStock.producto).all()
 
-    return redirect(url_for('book_stock'))
+    entradas = Entrada.query.order_by(Entrada.fecha.desc()).limit(20).all()
 
+    return render_template(
+        'admin.html',
+        data=productos_bajo_minimo,
+        entradas=entradas
+    )
 
 # ================== TALLER ==================
 @app.route('/taller', methods=['GET', 'POST'])
@@ -153,37 +132,28 @@ def editar_book_stock(id):
 @rol_required('taller')
 def taller():
     if request.method == 'POST':
-        try:
-            item_id = int(request.form['id'])
-        except (KeyError, ValueError):
-            flash('ID inválido', 'danger')
-            return redirect(url_for('taller'))
+        for key, value in request.form.items():
+            if key.startswith('salida_') and value:
+                item_id = int(key.split('_')[1])
+                cantidad = int(value)
 
-        item = BookStock.query.get(item_id)
-        if not item:
-            flash('Item no encontrado', 'danger')
-            return redirect(url_for('taller'))
+                item = BookStock.query.get(item_id)
+                if not item:
+                    continue
 
-        try:
-            cantidad = int(request.form['cantidad'])
-        except (KeyError, ValueError):
-            flash('Cantidad inválida', 'danger')
-            return redirect(url_for('taller'))
+                if cantidad > item.stock:
+                    flash(f'Stock insuficiente para {item.producto} {item.talla}', 'danger')
+                    continue
 
-        if item.stock is None:
-            item.stock = 0
+                item.stock -= cantidad
+                db.session.add(Salida(
+                    producto=item.producto,
+                    talla=item.talla,
+                    cantidad=cantidad
+                ))
 
-        if cantidad > item.stock:
-            flash('No hay suficiente stock', 'danger')
-            return redirect(url_for('taller'))
-
-        item.stock -= cantidad
-        db.session.add(Salida(
-            producto=item.producto,
-            talla=item.talla,
-            cantidad=cantidad
-        ))
         db.session.commit()
+        flash('Salidas registradas', 'success')
 
     data = BookStock.query.order_by(BookStock.producto).all()
     return render_template('taller.html', data=data)
@@ -194,93 +164,36 @@ def taller():
 @rol_required('maquila')
 def maquila():
     if request.method == 'POST':
-        try:
-            item_id = int(request.form['id'])
-        except (KeyError, ValueError):
-            flash('ID inválido', 'danger')
-            return redirect(url_for('maquila'))
+        for key, value in request.form.items():
+            if key.startswith('entrada_') and value:
+                item_id = int(key.split('_')[1])
+                cantidad = int(value)
 
-        item = BookStock.query.get(item_id)
-        if not item:
-            flash('Item no encontrado', 'danger')
-            return redirect(url_for('maquila'))
+                item = BookStock.query.get(item_id)
+                if not item:
+                    continue
 
-        try:
-            cantidad = int(request.form['cantidad'])
-        except (KeyError, ValueError):
-            flash('Cantidad inválida', 'danger')
-            return redirect(url_for('maquila'))
+                if cantidad > item.orden_compra:
+                    flash(f'Cantidad supera orden de compra en {item.producto}', 'danger')
+                    continue
 
-        if item.stock is None:
-            item.stock = 0
+                item.stock += cantidad
+                item.orden_compra -= cantidad
 
-        item.stock += cantidad
-        db.session.add(Entrada(
-            producto=item.producto,
-            talla=item.talla,
-            cantidad=cantidad
-        ))
+                db.session.add(Entrada(
+                    producto=item.producto,
+                    talla=item.talla,
+                    cantidad=cantidad
+                ))
+
         db.session.commit()
+        flash('Entradas registradas', 'success')
 
-    data = BookStock.query.order_by(BookStock.producto).all()
+    data = BookStock.query.filter(
+        BookStock.orden_compra > 0
+    ).order_by(BookStock.producto).all()
+
     return render_template('maquila.html', data=data)
-
-# ================== ADMIN ==================
-@app.route('/admin', methods=['GET', 'POST'])
-@login_required
-@rol_required('admin')
-def admin():
-    if request.method == 'POST':
-        try:
-            oc_id = int(request.form['id'])
-        except (KeyError, ValueError):
-            flash('ID inválido', 'danger')
-            return redirect(url_for('admin'))
-
-        oc = OrdenCompra.query.get(oc_id)
-        if not oc:
-            flash('Orden no encontrada', 'danger')
-            return redirect(url_for('admin'))
-
-        try:
-            oc.nueva_orden_compra = int(request.form.get('nueva', oc.nueva_orden_compra or 0))
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al guardar orden: {e}', 'danger')
-
-    data = OrdenCompra.query.all()
-    return render_template('admin.html', data=data)
-
-# ================== SYNC MANUAL ==================
-@app.route('/sync')
-@login_required
-@rol_required('admin')
-def sync_manual():
-    try:
-        subprocess.run(
-            ['python3', 'sync.py'],
-            check=True
-        )
-        flash('Sincronización completada correctamente', 'success')
-    except Exception as e:
-        flash(f'Error en sync: {e}', 'danger')
-
-    return redirect(url_for('admin'))
-
-
-# ================== AUMENTAR MINIMOS ==================
-@app.route('/aumentar-minimos')
-@login_required
-@rol_required('admin')
-def aumentar_minimos():
-    for item in BookStock.query.all():
-        if item.minimos is None:
-            item.minimos = 0
-        item.minimos += 2
-    db.session.commit()
-    flash('Mínimos aumentados', 'success')
-    return redirect(url_for('book_stock'))
 
 # ================== INIT ==================
 @app.route('/init-db')
