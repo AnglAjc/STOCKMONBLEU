@@ -73,6 +73,20 @@ class Salida(db.Model):
     cantidad = db.Column(db.Integer)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
 
+# ================== HELPERS ==================
+def color_stock(stock, minimo, orden):
+    if stock is None or minimo is None:
+        return 'verde'
+
+    if stock < minimo:
+        return 'rojo'
+
+    if orden and orden > 0:
+        return 'amarillo'
+
+    return 'verde'
+
+
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -97,7 +111,12 @@ def logout():
 @login_required
 def book_stock():
     data = BookStock.query.order_by(BookStock.producto).all()
-    return render_template('stock.html', data=data)
+    return render_template(
+        'stock.html',
+        data=data,
+        color_stock=color_stock
+    )
+
 
 # ================== ADMIN ==================
 @app.route('/admin', methods=['GET', 'POST'])
