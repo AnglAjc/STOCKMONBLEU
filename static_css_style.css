@@ -1,0 +1,26 @@
+/* Minimal styles for STOCKMONBLEU */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.text-danger {
+  font-weight: 700;
+}
+
+/* Small helper to highlight low stock rows (matches color_stock helper in app) */
+.low-stock {
+  background-color: #fff3cd; /* warning */
+}
+.critical-stock {
+  background-color: #f8d7da; /* danger */
+}
