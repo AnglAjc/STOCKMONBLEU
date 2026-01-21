@@ -136,6 +136,8 @@ def taller():
             if key.startswith('salida_') and value:
                 item_id = int(key.split('_')[1])
                 cantidad = int(value)
+                if cantidad <= 0;
+                  continue
 
                 item = BookStock.query.get(item_id)
                 if not item:
