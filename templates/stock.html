@@ -17,6 +17,10 @@
     <div>
         {% if session['rol'] == 'admin' %}
             <a href="/admin" class="btn btn-outline-light btn-sm me-2">Admin</a>
+
+            <a href="/aumentar-minimos" class="btn btn-warning btn-sm me-2">
+                Aumentar mínimos
+            </a>
         {% endif %}
         {% if session['rol'] == 'maquila' %}
             <a href="/maquila" class="btn btn-outline-light btn-sm me-2">Maquila</a>
