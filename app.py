@@ -64,6 +64,7 @@ class BookStock(db.Model):
     minimos = db.Column(db.Integer, default=0)
     en_produccion = db.Column(db.Integer, default=0)
     precio = db.Column(db.Float, default=0)
+    maquila = db.Column(db.String(1))  # NUEVO: A o B
 
 class OrdenCompra(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -136,11 +137,12 @@ def generar_pdf_orden(orden, detalles):
 
     data.append(['', '', '', 'TOTAL', f"${orden.total:.2f}"])
     data.append(['', '', '', 'ABONADO', f"${orden.abonado:.2f}"])
-    data.append(['', '', '', 'SALDO', f"${orden.saldo:.2f}"])
+    data.append(['', '', '', 'SALDO',
+                 'PAGADO' if orden.saldo <= 0 else f"${orden.saldo:.2f}"])
 
     table = Table(data)
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('BACKGROUND', (0,0), (-1,0), colors.orange),
         ('GRID', (0,0), (-1,-1), 1, colors.black)
     ]))
 
@@ -150,10 +152,10 @@ def generar_pdf_orden(orden, detalles):
 
 @app.context_processor
 def utility_processor():
-    def color_stock(stock, minimo, produccion):
+    def color_stock(stock, minimo):
         if stock < minimo:
             return 'table-danger'
-        if produccion and produccion > 0:
+        if stock <= minimo * 2:
             return 'table-warning'
         return 'table-success'
     return dict(color_stock=color_stock)
@@ -179,53 +181,45 @@ def logout():
 @app.route('/')
 @login_required
 def book_stock():
-    q = request.args.get('q', '')
-    query = BookStock.query
-    if q:
-        query = query.filter(
-            BookStock.producto.ilike(f'%{q}%') |
-            BookStock.categoria.ilike(f'%{q}%')
-        )
-    data = query.order_by(BookStock.producto).all()
-    return render_template('stock.html', data=data, q=q)
+    data = BookStock.query.order_by(BookStock.producto).all()
+    return render_template('stock.html', data=data)
 
 # ================== ADMIN ==================
 @app.route('/admin', methods=['GET','POST'])
 @login_required
 @rol_required('admin')
 def admin():
-    q = request.args.get('q', '')
+    maquila_filtro = request.args.get('maquila')
 
-    # ---- ACTUALIZAR ABONO ----
+    # ---- ABONOS ----
     if request.method == 'POST' and request.form.get('abono_orden'):
         orden = OrdenCompra.query.get(int(request.form['abono_orden']))
         monto = float(request.form.get('nuevo_abono', 0))
         if orden and monto > 0:
             orden.abonado += monto
-            orden.saldo = orden.total - orden.abonado
+            orden.saldo = max(0, orden.total - orden.abonado)
             db.session.add(Pago(orden_id=orden.id, monto=monto))
             db.session.commit()
-            flash('Abono actualizado correctamente')
         return redirect(url_for('admin'))
 
     # ---- CREAR ORDEN ----
-    if request.method == 'POST':
-        abonado = float(request.form.get('abonado', 0))
-        detalles = []
-        total = 0
-        maquila = None
-
+    if request.method == 'POST' and not request.form.get('abono_orden'):
         orden = OrdenCompra()
         db.session.add(orden)
         db.session.flush()
+
+        total = 0
+        maquila = None
+        detalles = []
 
         for key, val in request.form.items():
             if key.startswith('orden_') and val and int(val) > 0:
                 item = BookStock.query.get(int(key.split('_')[1]))
                 cantidad = int(val)
 
-                maquila = maquila_por_categoria(item.categoria)
                 item.en_produccion += cantidad
+                item.maquila = maquila_por_categoria(item.categoria)
+                maquila = item.maquila
 
                 subtotal = cantidad * item.precio
                 total += subtotal
@@ -241,33 +235,23 @@ def admin():
 
         orden.maquila = maquila
         orden.total = total
-        orden.abonado = abonado
-        orden.saldo = total - abonado
+        orden.abonado = 0
+        orden.saldo = total
 
         for d in detalles:
             db.session.add(d)
 
         orden.pdf = generar_pdf_orden(orden, detalles)
         db.session.commit()
-        flash('Orden creada correctamente')
 
     query = BookStock.query
-    if q:
-        query = query.filter(
-            BookStock.producto.ilike(f'%{q}%') |
-            BookStock.categoria.ilike(f'%{q}%')
-        )
-    else:
-        query = query.filter(
-            BookStock.stock < BookStock.minimos,
-            BookStock.en_produccion == 0
-        )
+    if maquila_filtro:
+        query = query.filter(BookStock.maquila == maquila_filtro)
 
     return render_template(
         'admin.html',
         data=query.order_by(BookStock.producto).all(),
-        ordenes=OrdenCompra.query.order_by(OrdenCompra.fecha.desc()).all(),
-        q=q
+        ordenes=OrdenCompra.query.order_by(OrdenCompra.fecha.desc()).all()
     )
 
 @app.route('/pdf/<nombre>')
@@ -289,10 +273,11 @@ def maquila():
                 item.stock += cantidad
                 db.session.add(Envio(producto=item.producto, talla=item.talla, cantidad=cantidad))
         db.session.commit()
-        flash('Envíos registrados')
 
-    data = BookStock.query.order_by(BookStock.producto).all()
-    return render_template('maquila.html', data=data)
+    data = BookStock.query.filter(BookStock.maquila == 'A').order_by(BookStock.producto).all()
+    ordenes = OrdenCompra.query.filter_by(maquila='A').order_by(OrdenCompra.fecha.desc()).all()
+
+    return render_template('maquila.html', data=data, ordenes=ordenes)
 
 # ================== TALLER ==================
 @app.route('/taller', methods=['GET','POST'])
@@ -317,7 +302,6 @@ def taller():
                 db.session.add(Salida(producto=item.producto, talla=item.talla, cantidad=int(val)))
 
         db.session.commit()
-        flash('Datos actualizados')
 
     data = BookStock.query.order_by(BookStock.producto).all()
     return render_template('taller.html', data=data, estado=estado)
