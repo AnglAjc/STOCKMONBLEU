@@ -2,108 +2,58 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Book Stock</title>
-
-    <!-- Bootstrap -->
+    <title>Stock</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- CSS propio -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar navbar-dark bg-dark px-3">
-    <span class="navbar-brand fw-bold">MONBLEU – Book Stock</span>
-
-    <div class="d-flex align-items-center">
-        {% if session['rol'] == 'taller' %}
-            <a href="{{ url_for('taller') }}" class="btn btn-outline-light btn-sm me-2">
-                Taller
-            </a>
-        {% endif %}
-
-        {% if session['rol'] == 'maquila' %}
-            <a href="{{ url_for('maquila') }}" class="btn btn-outline-light btn-sm me-2">
-                Maquila
-            </a>
-        {% endif %}
-
+    <span class="navbar-brand">MONBLEU – Stock</span>
+    <div>
         {% if session['rol'] == 'admin' %}
-            <a href="{{ url_for('admin') }}" class="btn btn-outline-light btn-sm me-2">
-                Admin
-            </a>
-
-            <a href="/aumentar-minimos" class="btn btn-warning btn-sm me-2">
-                Aumentar mínimos
-            </a>
+        <a href="/admin" class="btn btn-outline-light btn-sm me-2">Admin</a>
         {% endif %}
-
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
-            Salir
-        </a>
+        {% if session['rol'] == 'maquila' %}
+        <a href="/maquila" class="btn btn-outline-light btn-sm me-2">Maquila</a>
+        {% endif %}
+        {% if session['rol'] == 'taller' %}
+        <a href="/taller" class="btn btn-outline-light btn-sm me-2">Taller</a>
+        {% endif %}
+        <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
     </div>
 </nav>
 
-<!-- CONTENIDO -->
 <div class="container mt-4">
 
-    <h5 class="mb-3 fw-bold">Inventario General</h5>
+<form method="get" class="mb-3">
+    <input type="text" name="q" value="{{ q }}" class="form-control"
+           placeholder="Buscar por producto o categoría">
+</form>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-sm align-middle">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th>Producto</th>
-                    <th>Talla</th>
-                    <th>Stock</th>
-                    <th>Mínimo</th>
-                    <th>En producción</th>
-                </tr>
-            </thead>
-
-            <tbody>
-            {% for i in data %}
-                <tr class="{{ color_stock(i.stock, i.minimos, i.en_produccion) }} text-center">
-                    <td class="text-start fw-semibold">
-                        {{ i.producto }}
-                    </td>
-
-                    <td>
-                        {{ i.talla }}
-                    </td>
-
-                    <td>
-                        <strong>{{ i.stock }}</strong>
-                    </td>
-
-                    <td>
-                        {{ i.minimos }}
-                    </td>
-
-                    <td>
-                        {% if i.en_produccion and i.en_produccion > 0 %}
-                            <span class="fw-bold text-warning">
-                                {{ i.en_produccion }}
-                            </span>
-                        {% else %}
-                            <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- LEYENDA -->
-    <div class="mt-3 small">
-        <span class="badge bg-success me-2">Stock suficiente</span>
-        <span class="badge bg-warning text-dark me-2">En mínimo</span>
-        <span class="badge bg-danger">Stock crítico</span>
-    </div>
+<table class="table table-bordered table-sm align-middle">
+<thead class="table-dark text-center">
+<tr>
+    <th>Producto</th>
+    <th>Talla</th>
+    <th>Stock</th>
+    <th>Mínimo</th>
+    <th>En producción</th>
+</tr>
+</thead>
+<tbody>
+{% for i in data %}
+<tr class="{{ color_stock(i.stock, i.minimos, i.en_produccion) }} text-center">
+    <td class="text-start">{{ i.producto }}</td>
+    <td>{{ i.talla }}</td>
+    <td class="fw-bold">{{ i.stock }}</td>
+    <td>{{ i.minimos }}</td>
+    <td>{{ i.en_produccion }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
 
 </div>
-
 </body>
 </html>
