@@ -191,7 +191,7 @@ def book_stock():
 @rol_required('admin')
 def admin():
     maquila_filtro = request.args.get('maquila')
-    q = request.args.get('q', '').strip()   # ← AÑADIDO (NO elimina nada)
+    q = request.args.get('q', '').strip()   # ← YA ESTABA, SE RESPETA
 
     # ---- ABONOS ----
     if request.method == 'POST' and request.form.get('abono_orden'):
@@ -247,15 +247,15 @@ def admin():
         db.session.commit()
 
     # ---- QUERY STOCK ----
-query = BookStock.query.filter(
-    BookStock.stock < BookStock.minimos,
-    BookStock.en_produccion == 0
-)
+    query = BookStock.query.filter(
+        BookStock.stock < BookStock.minimos,
+        BookStock.en_produccion == 0   # 🔥 CLAVE: ya pedidos NO aparecen
+    )
 
     if maquila_filtro:
         query = query.filter(BookStock.maquila == maquila_filtro)
 
-    if q:   # ← AÑADIDO: BUSCADOR FUNCIONAL
+    if q:   # ← BUSCADOR FUNCIONAL (NO SE TOCA)
         query = query.filter(
             db.or_(
                 BookStock.producto.ilike(f'%{q}%'),
@@ -267,7 +267,7 @@ query = BookStock.query.filter(
         'admin.html',
         data=query.order_by(BookStock.producto).all(),
         ordenes=OrdenCompra.query.order_by(OrdenCompra.fecha.desc()).all(),
-        q=q   # ← AÑADIDO para mantener texto en input
+        q=q
     )
 
 
@@ -275,6 +275,7 @@ query = BookStock.query.filter(
 @login_required
 def ver_pdf(nombre):
     return send_file(os.path.join(app.config['PDF_FOLDER'], nombre))
+
 
 
 # ================== MAQUILA ==================
