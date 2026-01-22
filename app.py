@@ -148,6 +148,17 @@ def generar_pdf_orden(orden, detalles):
     doc.build(elements)
     return filename
 
+@app.context_processor
+def utility_processor():
+    def color_stock(stock, minimo, produccion):
+        if stock < minimo:
+            return 'table-danger'
+        if produccion and produccion > 0:
+            return 'table-warning'
+        return 'table-success'
+    return dict(color_stock=color_stock)
+
+
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET','POST'])
 def login():
