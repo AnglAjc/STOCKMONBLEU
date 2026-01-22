@@ -64,7 +64,7 @@ class BookStock(db.Model):
     minimos = db.Column(db.Integer, default=0)
     en_produccion = db.Column(db.Integer, default=0)
     precio = db.Column(db.Float, default=0)
-    maquila = db.Column(db.String(1))  # NUEVO: A o B
+    maquila = db.Column(db.String(1))  # A o B
 
 class OrdenCompra(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -150,12 +150,13 @@ def generar_pdf_orden(orden, detalles):
     doc.build(elements)
     return filename
 
+# ================== CONTEXT ==================
 @app.context_processor
 def utility_processor():
-    def color_stock(stock, minimo):
-        if stock < minimo:
+    def color_stock(stock, minimos, en_produccion):
+        if stock <= minimos and en_produccion == 0:
             return 'table-danger'
-        if stock <= minimo * 2:
+        if en_produccion > 0:
             return 'table-warning'
         return 'table-success'
     return dict(color_stock=color_stock)
@@ -177,7 +178,7 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ================== STOCK GENERAL ==================
+# ================== STOCK ==================
 @app.route('/')
 @login_required
 def book_stock():
@@ -191,7 +192,6 @@ def book_stock():
 def admin():
     maquila_filtro = request.args.get('maquila')
 
-    # ---- ABONOS ----
     if request.method == 'POST' and request.form.get('abono_orden'):
         orden = OrdenCompra.query.get(int(request.form['abono_orden']))
         monto = float(request.form.get('nuevo_abono', 0))
@@ -202,7 +202,6 @@ def admin():
             db.session.commit()
         return redirect(url_for('admin'))
 
-    # ---- CREAR ORDEN ----
     if request.method == 'POST' and not request.form.get('abono_orden'):
         orden = OrdenCompra()
         db.session.add(orden)
