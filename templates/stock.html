@@ -40,25 +40,24 @@
             <th>Talla</th>
             <th>Stock</th>
             <th>Mínimo</th>
-            <th>Orden de compra</th>
+            <th>En producción</th>
         </tr>
     </thead>
 
     <tbody>
     {% for i in data %}
-        <tr class="{{ color_stock(i.stock, i.minimos, i.orden_compra) }} text-center">
+        <tr class="{{ color_stock(i.stock, i.minimos, i.en_produccion) }} text-center">
             <td class="text-start">{{ i.producto }}</td>
             <td>{{ i.talla }}</td>
             <td><strong>{{ i.stock }}</strong></td>
             <td>{{ i.minimos }}</td>
-          <td>
-    {% if i.minimos is not none and i.stock < i.minimos %}
-        <span class="fw-bold text-danger">{{ i.orden_compra }}</span>
-    {% else %}
-        <span class="text-success">Aún no</span>
-    {% endif %}
-</td>
-
+            <td>
+                {% if i.en_produccion > 0 %}
+                    <span class="fw-bold text-warning">{{ i.en_produccion }}</span>
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
     </tbody>
