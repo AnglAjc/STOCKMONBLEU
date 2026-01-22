@@ -186,7 +186,6 @@ def book_stock():
     return render_template('stock.html', data=data)
 
 # ================== ADMIN ==================
-# ================== ADMIN ==================
 @app.route('/admin', methods=['GET','POST'])
 @login_required
 @rol_required('admin')
@@ -248,7 +247,10 @@ def admin():
         db.session.commit()
 
     # ---- QUERY STOCK ----
-    query = BookStock.query
+query = BookStock.query.filter(
+    BookStock.stock < BookStock.minimos,
+    BookStock.en_produccion == 0
+)
 
     if maquila_filtro:
         query = query.filter(BookStock.maquila == maquila_filtro)
