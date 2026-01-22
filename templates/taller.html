@@ -19,6 +19,16 @@
 
 <div class="container mt-4">
 
+    {% if ultimo_pedido %}
+        <div class="alert alert-info">
+            <strong>📌 Último pedido atendido por taller:</strong> {{ ultimo_pedido }}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            No se ha registrado el último pedido del taller.
+        </div>
+    {% endif %}
+
     <h4 class="mb-3">🛠 Registrar salidas de taller</h4>
 
     <form method="post">
