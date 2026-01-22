@@ -25,7 +25,8 @@
 </form>
 
 {% if data %}
-<form method="post">
+<form method="post" id="ordenForm">
+
 <table class="table table-bordered table-sm align-middle">
     <thead class="table-dark text-center">
         <tr>
@@ -40,16 +41,26 @@
     </thead>
     <tbody>
         {% for i in data %}
-        <tr class="text-center">
+        {% set clase =
+            'table-danger' if i.stock < i.minimos else
+            'table-warning' if i.stock <= i.minimos * 2 else
+            'table-success'
+        %}
+        <tr class="text-center {{ clase }}">
             <td class="text-start fw-semibold">{{ i.producto }}</td>
             <td>{{ i.talla }}</td>
-            <td class="fw-bold text-danger">{{ i.stock }}</td>
+            <td class="fw-bold">{{ i.stock }}</td>
             <td>{{ i.minimos }}</td>
             <td class="fw-bold text-warning">{{ i.en_produccion }}</td>
-            <td>${{ "%.2f"|format(i.precio) }}</td>
+            <td class="precio" data-precio="{{ i.precio }}">
+                ${{ "%.2f"|format(i.precio) }}
+            </td>
             <td>
-                <input type="number" class="form-control form-control-sm text-center"
-                       name="orden_{{ i.id }}" min="0" placeholder="0">
+                <input type="number"
+                       class="form-control form-control-sm text-center orden-input"
+                       name="orden_{{ i.id }}"
+                       min="0"
+                       value="0">
             </td>
         </tr>
         {% endfor %}
@@ -62,9 +73,18 @@
         <input type="number" step="0.01" name="abonado"
                class="form-control" placeholder="0.00">
     </div>
+    <div class="col-md-4">
+        <label class="form-label fw-bold">Total estimado</label>
+        <input type="text" id="totalEstimado"
+               class="form-control fw-bold"
+               value="$0.00" readonly>
+    </div>
 </div>
 
-<button class="btn btn-primary mt-3">📄 Crear orden y generar PDF</button>
+<button class="btn btn-primary mt-3">
+    📄 Crear orden y generar PDF
+</button>
+
 </form>
 {% else %}
 <div class="alert alert-success">✔ No hay productos bajo mínimo</div>
@@ -93,15 +113,29 @@
             <td class="fw-bold">Maquila {{ o.maquila }}</td>
             <td>${{ "%.2f"|format(o.total) }}</td>
             <td>${{ "%.2f"|format(o.abonado) }}</td>
-            <td class="fw-bold text-danger">${{ "%.2f"|format(o.saldo) }}</td>
-            <td>{% if o.pdf %}<a href="/pdf/{{ o.pdf }}" target="_blank">📄 Ver</a>{% endif %}</td>
+            <td class="fw-bold {{ 'text-success' if o.saldo <= 0 else 'text-danger' }}">
+                {% if o.saldo <= 0 %}
+                    PAGADO
+                {% else %}
+                    ${{ "%.2f"|format(o.saldo) }}
+                {% endif %}
+            </td>
             <td>
+                {% if o.pdf %}
+                    <a href="/pdf/{{ o.pdf }}" target="_blank">📄 Ver</a>
+                {% endif %}
+            </td>
+            <td>
+                {% if o.saldo > 0 %}
                 <form method="post" class="d-flex">
                     <input type="hidden" name="abono_orden" value="{{ o.id }}">
                     <input type="number" step="0.01" name="nuevo_abono"
                            class="form-control form-control-sm">
                     <button class="btn btn-success btn-sm ms-1">+</button>
                 </form>
+                {% else %}
+                    —
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
@@ -109,5 +143,24 @@
 </table>
 
 </div>
+
+<script>
+const inputs = document.querySelectorAll('.orden-input');
+const precios = document.querySelectorAll('.precio');
+const totalInput = document.getElementById('totalEstimado');
+
+function calcularTotal() {
+    let total = 0;
+    inputs.forEach((input, index) => {
+        const cantidad = parseInt(input.value) || 0;
+        const precio = parseFloat(precios[index].dataset.precio) || 0;
+        total += cantidad * precio;
+    });
+    totalInput.value = '$' + total.toFixed(2);
+}
+
+inputs.forEach(i => i.addEventListener('input', calcularTotal));
+</script>
+
 </body>
 </html>
