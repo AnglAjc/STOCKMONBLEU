@@ -69,9 +69,9 @@ class OrdenCompra(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     maquila = db.Column(db.String(10))
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
-    total = db.Column(db.Float)
-    abonado = db.Column(db.Float)
-    saldo = db.Column(db.Float)
+    total = db.Column(db.Float, default=0)
+    abonado = db.Column(db.Float, default=0)
+    saldo = db.Column(db.Float, default=0)
     pdf = db.Column(db.String(200))
 
 class OrdenDetalle(db.Model):
@@ -158,7 +158,6 @@ def utility_processor():
         return 'table-success'
     return dict(color_stock=color_stock)
 
-
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -197,6 +196,19 @@ def book_stock():
 def admin():
     q = request.args.get('q', '')
 
+    # ---- ACTUALIZAR ABONO ----
+    if request.method == 'POST' and request.form.get('abono_orden'):
+        orden = OrdenCompra.query.get(int(request.form['abono_orden']))
+        monto = float(request.form.get('nuevo_abono', 0))
+        if orden and monto > 0:
+            orden.abonado += monto
+            orden.saldo = orden.total - orden.abonado
+            db.session.add(Pago(orden_id=orden.id, monto=monto))
+            db.session.commit()
+            flash('Abono actualizado correctamente')
+        return redirect(url_for('admin'))
+
+    # ---- CREAR ORDEN ----
     if request.method == 'POST':
         abonado = float(request.form.get('abonado', 0))
         detalles = []
@@ -246,7 +258,10 @@ def admin():
             BookStock.categoria.ilike(f'%{q}%')
         )
     else:
-        query = query.filter(BookStock.stock < BookStock.minimos)
+        query = query.filter(
+            BookStock.stock < BookStock.minimos,
+            BookStock.en_produccion == 0
+        )
 
     return render_template(
         'admin.html',
@@ -272,18 +287,11 @@ def maquila():
                 cantidad = int(val)
                 item.en_produccion -= cantidad
                 item.stock += cantidad
-                db.session.add(Envio(
-                    producto=item.producto,
-                    talla=item.talla,
-                    cantidad=cantidad
-                ))
+                db.session.add(Envio(producto=item.producto, talla=item.talla, cantidad=cantidad))
         db.session.commit()
         flash('Envíos registrados')
 
-    data = BookStock.query.filter(
-        BookStock.categoria.in_(['Pantalones','Playeras','Hoddies','Jerseys','Accesorios'])
-    ).order_by(BookStock.producto).all()
-
+    data = BookStock.query.order_by(BookStock.producto).all()
     return render_template('maquila.html', data=data)
 
 # ================== TALLER ==================
@@ -306,11 +314,7 @@ def taller():
             if key.startswith('salida_') and val:
                 item = BookStock.query.get(int(key.split('_')[1]))
                 item.stock -= int(val)
-                db.session.add(Salida(
-                    producto=item.producto,
-                    talla=item.talla,
-                    cantidad=int(val)
-                ))
+                db.session.add(Salida(producto=item.producto, talla=item.talla, cantidad=int(val)))
 
         db.session.commit()
         flash('Datos actualizados')
