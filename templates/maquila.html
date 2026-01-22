@@ -49,8 +49,7 @@
                             class="form-control form-control-sm text-center"
                             min="0"
                             max="{{ i.en_produccion }}"
-                            placeholder="0"
-                        >
+                            placeholder="0">
                     </td>
                 </tr>
                 {% endfor %}
@@ -61,6 +60,37 @@
             📦 Registrar envíos
         </button>
     </form>
+
+    <hr class="my-4">
+
+    <h4 class="mb-3">📄 Órdenes de compra – Maquila</h4>
+
+    <table class="table table-sm table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Abonado</th>
+                <th>Saldo</th>
+                <th>PDF</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in ordenes %}
+            <tr>
+                <td>{{ o.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>${{ "%.2f"|format(o.total) }}</td>
+                <td>${{ "%.2f"|format(o.abonado) }}</td>
+                <td class="fw-bold text-danger">${{ "%.2f"|format(o.saldo) }}</td>
+                <td>
+                    {% if o.pdf %}
+                        <a href="/pdf/{{ o.pdf }}" target="_blank">📄 Ver</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 </div>
 
