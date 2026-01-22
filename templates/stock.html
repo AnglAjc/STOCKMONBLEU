@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Stock</title>
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- CSS propio -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
 <nav class="navbar navbar-dark bg-dark px-3">
-    <span class="navbar-brand">MONBLEU – Stock</span>
+    <span class="navbar-brand fw-bold">MONBLEU – Stock</span>
     <div>
         {% if session['rol'] == 'admin' %}
-        <a href="/admin" class="btn btn-outline-light btn-sm me-2">Admin</a>
+            <a href="/admin" class="btn btn-outline-light btn-sm me-2">Admin</a>
         {% endif %}
         {% if session['rol'] == 'maquila' %}
-        <a href="/maquila" class="btn btn-outline-light btn-sm me-2">Maquila</a>
+            <a href="/maquila" class="btn btn-outline-light btn-sm me-2">Maquila</a>
         {% endif %}
         {% if session['rol'] == 'taller' %}
-        <a href="/taller" class="btn btn-outline-light btn-sm me-2">Taller</a>
+            <a href="/taller" class="btn btn-outline-light btn-sm me-2">Taller</a>
         {% endif %}
         <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
     </div>
@@ -26,34 +30,41 @@
 
 <div class="container mt-4">
 
-<form method="get" class="mb-3">
-    <input type="text" name="q" value="{{ q }}" class="form-control"
-           placeholder="Buscar por producto o categoría">
-</form>
+    <!-- BUSCADOR -->
+    <form method="get" class="mb-3">
+        <input
+            type="text"
+            name="q"
+            value="{{ q or '' }}"
+            class="form-control"
+            placeholder="Buscar por producto o categoría">
+    </form>
 
-<table class="table table-bordered table-sm align-middle">
-<thead class="table-dark text-center">
-<tr>
-    <th>Producto</th>
-    <th>Talla</th>
-    <th>Stock</th>
-    <th>Mínimo</th>
-    <th>En producción</th>
-</tr>
-</thead>
-<tbody>
-{% for i in data %}
-<tr class="{{ color_stock(i.stock, i.minimos, i.en_produccion) }} text-center">
-    <td class="text-start">{{ i.producto }}</td>
-    <td>{{ i.talla }}</td>
-    <td class="fw-bold">{{ i.stock }}</td>
-    <td>{{ i.minimos }}</td>
-    <td>{{ i.en_produccion }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+    <!-- TABLA STOCK -->
+    <table class="table table-bordered table-sm align-middle">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Producto</th>
+                <th>Talla</th>
+                <th>Stock</th>
+                <th>Mínimo</th>
+                <th>En producción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in data %}
+            <tr class="{{ color_stock(i.stock, i.minimos, i.en_produccion) }} text-center">
+                <td class="text-start fw-semibold">{{ i.producto }}</td>
+                <td>{{ i.talla }}</td>
+                <td class="fw-bold">{{ i.stock }}</td>
+                <td>{{ i.minimos }}</td>
+                <td>{{ i.en_produccion }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 </div>
+
 </body>
 </html>
