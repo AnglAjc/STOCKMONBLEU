@@ -20,19 +20,28 @@
 
 <h4 class="mb-3">📉 Productos bajo mínimo</h4>
 
-    
-    <!-- BUSCADOR -->
-    <form method="get" class="mb-3">
-        <input
-            type="text"
-            name="q"
-            value="{{ q or '' }}"
-            class="form-control"
-            placeholder="Buscar por producto o categoría">
-    </form>
-    
+<!-- BUSCADOR -->
+<form method="get" class="mb-3">
+    <input
+        type="text"
+        name="q"
+        value="{{ q or '' }}"
+        class="form-control"
+        placeholder="Buscar por producto o categoría">
+</form>
+
 {% if data %}
 <form method="post">
+
+<!-- MAQUILA (OBLIGATORIO PARA app.py) -->
+<div class="mb-3">
+    <label class="form-label fw-bold">Maquila</label>
+    <select name="maquila" class="form-select" required>
+        <option value="A">Maquila A</option>
+        <option value="B">Maquila B</option>
+    </select>
+</div>
+
 <table class="table table-bordered table-sm align-middle">
     <thead class="table-dark text-center">
         <tr>
@@ -40,7 +49,7 @@
             <th>Talla</th>
             <th>Stock</th>
             <th>Mínimo</th>
-            <th>En producción</th>
+            <th>Ordenar</th>
         </tr>
     </thead>
     <tbody>
@@ -51,14 +60,22 @@
             <td class="fw-bold text-danger">{{ i.stock }}</td>
             <td>{{ i.minimos }}</td>
             <td>
-                <input type="number" class="form-control form-control-sm text-center"
-                       name="produccion_{{ i.id }}" value="{{ i.en_produccion }}" min="0">
+                <input
+                    type="number"
+                    class="form-control form-control-sm text-center"
+                    name="orden_{{ i.id }}"
+                    min="0"
+                    placeholder="0">
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-<button class="btn btn-primary">💾 Actualizar producción</button>
+
+<button class="btn btn-primary">
+    📄 Crear orden y PDF
+</button>
+
 </form>
 {% else %}
 <div class="alert alert-success">✔ No hay productos bajo mínimo</div>
@@ -67,6 +84,7 @@
 <hr class="my-4">
 
 <h4>🧾 Órdenes de compra</h4>
+
 <table class="table table-sm table-striped">
     <thead>
         <tr>
