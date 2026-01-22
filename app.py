@@ -224,7 +224,7 @@ def maquila():
         flash('Envíos registrados')
 
     data = BookStock.query.filter(
-        BookStock.categoria.notin_(['Jerseys','Paliacates','Gorras'])
+        BookStock.categoria.notin_(['Jerseys','Accesorios','Gorras'])
     ).order_by(BookStock.producto).all()
 
     return render_template('maquila.html', data=data)
