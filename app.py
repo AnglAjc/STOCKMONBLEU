@@ -216,6 +216,19 @@ def maquila():
 
     return render_template('maquila.html', data=data)
 
+# ================== AUMENTAR MINIMOS ==================
+@app.route('/aumentar-minimos')
+@login_required
+@rol_required('admin')
+def aumentar_minimos():
+    for item in BookStock.query.all():
+        if item.minimos is None:
+            item.minimos = 0
+        item.minimos += 2
+    db.session.commit()
+    flash('Mínimos aumentados', 'success')
+    return redirect(url_for('book_stock'))
+
 # ================== INIT ==================
 @app.route('/init-db')
 def init_db():
