@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Administrador</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
@@ -33,15 +32,6 @@
 {% if data %}
 <form method="post">
 
-<!-- MAQUILA (OBLIGATORIO PARA app.py) -->
-<div class="mb-3">
-    <label class="form-label fw-bold">Maquila</label>
-    <select name="maquila" class="form-select" required>
-        <option value="A">Maquila A</option>
-        <option value="B">Maquila B</option>
-    </select>
-</div>
-
 <table class="table table-bordered table-sm align-middle">
     <thead class="table-dark text-center">
         <tr>
@@ -49,6 +39,8 @@
             <th>Talla</th>
             <th>Stock</th>
             <th>Mínimo</th>
+            <th>En producción</th>
+            <th>Precio</th>
             <th>Ordenar</th>
         </tr>
     </thead>
@@ -59,6 +51,8 @@
             <td>{{ i.talla }}</td>
             <td class="fw-bold text-danger">{{ i.stock }}</td>
             <td>{{ i.minimos }}</td>
+            <td class="fw-bold text-warning">{{ i.en_produccion }}</td>
+            <td>${{ "%.2f"|format(i.precio) }}</td>
             <td>
                 <input
                     type="number"
@@ -72,8 +66,20 @@
     </tbody>
 </table>
 
-<button class="btn btn-primary">
-    📄 Crear orden y PDF
+<div class="row mt-3">
+    <div class="col-md-4">
+        <label class="form-label fw-bold">Monto abonado</label>
+        <input
+            type="number"
+            step="0.01"
+            name="abonado"
+            class="form-control"
+            placeholder="0.00">
+    </div>
+</div>
+
+<button class="btn btn-primary mt-3">
+    📄 Crear orden y generar PDF
 </button>
 
 </form>
@@ -86,10 +92,13 @@
 <h4>🧾 Órdenes de compra</h4>
 
 <table class="table table-sm table-striped">
-    <thead>
+    <thead class="table-dark">
         <tr>
             <th>Fecha</th>
             <th>Maquila</th>
+            <th>Total</th>
+            <th>Abonado</th>
+            <th>Saldo</th>
             <th>PDF</th>
         </tr>
     </thead>
@@ -97,7 +106,10 @@
         {% for o in ordenes %}
         <tr>
             <td>{{ o.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
-            <td>{{ o.maquila }}</td>
+            <td class="fw-bold">Maquila {{ o.maquila }}</td>
+            <td>${{ "%.2f"|format(o.total) }}</td>
+            <td>${{ "%.2f"|format(o.abonado) }}</td>
+            <td class="fw-bold text-danger">${{ "%.2f"|format(o.saldo) }}</td>
             <td>
                 {% if o.pdf %}
                 <a href="/pdf/{{ o.pdf }}" target="_blank">📄 Ver</a>
@@ -109,5 +121,6 @@
 </table>
 
 </div>
+
 </body>
 </html>
