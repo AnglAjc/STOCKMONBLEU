@@ -129,13 +129,13 @@ def generar_pdf_orden(orden, detalles):
     elements.append(table)
     doc.build(elements)
     return filename
-    
+
 @app.context_processor
 def utility_processor():
     def color_stock(stock, minimo, produccion):
-        if stock <= 0:
+        if stock < minimo:
             return 'rojo'
-        if stock <= minimo:
+        if produccion and produccion > 0:
             return 'amarillo'
         return 'verde'
     return dict(color_stock=color_stock)
@@ -157,12 +157,19 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ================== STOCK GENERAL ==================
+# ================== STOCK GENERAL (CON BUSCADOR) ==================
 @app.route('/')
 @login_required
 def book_stock():
-    data = BookStock.query.order_by(BookStock.producto).all()
-    return render_template('stock.html', data=data)
+    q = request.args.get('q', '')
+    query = BookStock.query
+    if q:
+        query = query.filter(
+            (BookStock.producto.ilike(f'%{q}%')) |
+            (BookStock.categoria.ilike(f'%{q}%'))
+        )
+    data = query.order_by(BookStock.producto).all()
+    return render_template('stock.html', data=data, q=q)
 
 # ================== ADMIN ==================
 @app.route('/admin', methods=['GET','POST'])
@@ -190,20 +197,28 @@ def admin():
                 db.session.add(d)
                 detalles.append(d)
 
-        pdf_name = generar_pdf_orden(orden, detalles)
-        orden.pdf = pdf_name
+        orden.pdf = generar_pdf_orden(orden, detalles)
         db.session.commit()
         flash('Orden creada y PDF generado')
 
+    productos_bajo_minimo = BookStock.query.filter(
+        BookStock.stock < BookStock.minimos
+    ).order_by(BookStock.producto).all()
+
     ordenes = OrdenCompra.query.order_by(OrdenCompra.fecha.desc()).all()
-    return render_template('admin.html', ordenes=ordenes)
+
+    return render_template(
+        'admin.html',
+        data=productos_bajo_minimo,
+        ordenes=ordenes
+    )
 
 @app.route('/pdf/<nombre>')
 @login_required
 def ver_pdf(nombre):
     return send_file(os.path.join(app.config['PDF_FOLDER'], nombre))
 
-# ================== MAQUILA ==================
+# ================== MAQUILA (SOLO PANTALONES, PLAYERAS, HODDIES) ==================
 @app.route('/maquila', methods=['GET','POST'])
 @login_required
 @rol_required('maquila')
@@ -224,24 +239,26 @@ def maquila():
         flash('Envíos registrados')
 
     data = BookStock.query.filter(
-        BookStock.categoria.notin_(['Jerseys','Accesorios','Gorras'])
+        BookStock.categoria.in_(['Pantalones','Playeras','Hoddies'])
     ).order_by(BookStock.producto).all()
 
     return render_template('maquila.html', data=data)
 
-# ================== TALLER ==================
+# ================== TALLER (ÚLTIMO PEDIDO FUNCIONAL) ==================
 @app.route('/taller', methods=['GET','POST'])
 @login_required
 @rol_required('taller')
 def taller():
     estado = TallerEstado.query.first()
+
     if request.method == 'POST':
-        if 'ultimo_pedido' in request.form:
+        ultimo = request.form.get('ultimo_pedido')
+        if ultimo is not None:
             if not estado:
-                estado = TallerEstado(ultimo_pedido=request.form['ultimo_pedido'])
+                estado = TallerEstado(ultimo_pedido=ultimo)
                 db.session.add(estado)
             else:
-                estado.ultimo_pedido = request.form['ultimo_pedido']
+                estado.ultimo_pedido = ultimo
 
         for key,val in request.form.items():
             if key.startswith('salida_') and val:
@@ -252,6 +269,7 @@ def taller():
                     talla=item.talla,
                     cantidad=int(val)
                 ))
+
         db.session.commit()
         flash('Datos actualizados')
 
@@ -266,9 +284,9 @@ def aumentar_minimos():
     for item in BookStock.query.all():
         item.minimos += 2
     db.session.commit()
-    flash('Mínimos aumentados', 'success')
+    flash('Mínimos aumentados')
     return redirect(url_for('book_stock'))
-    
+
 # ================== INIT ==================
 @app.route('/init-db')
 def init_db():
