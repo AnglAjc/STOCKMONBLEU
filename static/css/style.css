@@ -1,11 +1,57 @@
+/* ===============================
+   ESTADOS GENERALES DE STOCK
+================================ */
+
+/* Stock OK */
 .verde {
     background-color: #e8f5e9;
 }
 
+/* En producción */
 .amarillo {
     background-color: #fff8e1;
 }
 
+/* Bajo mínimo */
 .rojo {
     background-color: #fdecea;
+}
+
+
+/* ===============================
+   ESTADOS ESPECIALES
+================================ */
+
+/* Stock negativo (taller) */
+.stock-negativo {
+    background-color: #f8d7da;
+    color: #842029;
+    font-weight: bold;
+}
+
+/* Producción activa destacada */
+.produccion-activa {
+    background-color: #fff3cd;
+    font-weight: bold;
+}
+
+/* Sin stock */
+.sin-stock {
+    color: #6c757d;
+    font-style: italic;
+}
+
+
+/* ===============================
+   MEJORAS VISUALES TABLAS
+================================ */
+
+table td,
+table th {
+    vertical-align: middle !important;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+    transition: background-color 0.2s ease-in-out;
 }
