@@ -57,9 +57,9 @@ class BookStock(db.Model):
     talla = db.Column(db.String(10))
     stock = db.Column(db.Integer, default=0)
     minimos = db.Column(db.Integer, default=0)
-    orden_compra = db.Column(db.Integer, default=0)
+    en_produccion = db.Column(db.Integer, default=0)  # antes orden_compra
 
-class Entrada(db.Model):
+class Envio(db.Model):  # antes Entrada
     id = db.Column(db.Integer, primary_key=True)
     producto = db.Column(db.String(100))
     talla = db.Column(db.String(10))
@@ -74,18 +74,14 @@ class Salida(db.Model):
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ================== HELPERS ==================
-def color_stock(stock, minimo, orden):
+def color_stock(stock, minimo, en_produccion):
     if stock is None or minimo is None:
         return 'verde'
-
     if stock < minimo:
         return 'rojo'
-
-    if orden and orden > 0:
+    if en_produccion and en_produccion > 0:
         return 'amarillo'
-
     return 'verde'
-
 
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET', 'POST'])
@@ -97,7 +93,6 @@ def login():
             session['usuario'] = user.usuario
             session['rol'] = user.rol
             return redirect(url_for('book_stock'))
-
         flash('Credenciales incorrectas', 'danger')
     return render_template('login.html')
 
@@ -117,7 +112,6 @@ def book_stock():
         color_stock=color_stock
     )
 
-
 # ================== ADMIN ==================
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
@@ -125,24 +119,24 @@ def book_stock():
 def admin():
     if request.method == 'POST':
         for key, value in request.form.items():
-            if key.startswith('orden_'):
+            if key.startswith('produccion_'):
                 item_id = int(key.split('_')[1])
                 item = BookStock.query.get(item_id)
                 if item:
-                    item.orden_compra = int(value or 0)
+                    item.en_produccion = int(value or 0)
         db.session.commit()
-        flash('Órdenes actualizadas', 'success')
+        flash('Producción actualizada', 'success')
 
     productos_bajo_minimo = BookStock.query.filter(
         BookStock.stock < BookStock.minimos
     ).order_by(BookStock.producto).all()
 
-    entradas = Entrada.query.order_by(Entrada.fecha.desc()).limit(20).all()
+    envios = Envio.query.order_by(Envio.fecha.desc()).limit(20).all()
 
     return render_template(
         'admin.html',
         data=productos_bajo_minimo,
-        entradas=entradas
+        envios=envios
     )
 
 # ================== TALLER ==================
@@ -155,18 +149,14 @@ def taller():
             if key.startswith('salida_') and value:
                 item_id = int(key.split('_')[1])
                 cantidad = int(value)
-                if cantidad <= 0:
-                  continue
 
                 item = BookStock.query.get(item_id)
                 if not item:
                     continue
 
-                if cantidad > item.stock:
-                    flash(f'Stock insuficiente para {item.producto} {item.talla}', 'danger')
-                    continue
-
+                # Se permite stock negativo
                 item.stock -= cantidad
+
                 db.session.add(Salida(
                     producto=item.producto,
                     talla=item.talla,
@@ -186,7 +176,7 @@ def taller():
 def maquila():
     if request.method == 'POST':
         for key, value in request.form.items():
-            if key.startswith('entrada_') and value:
+            if key.startswith('envio_') and value:
                 item_id = int(key.split('_')[1])
                 cantidad = int(value)
 
@@ -194,24 +184,24 @@ def maquila():
                 if not item:
                     continue
 
-                if cantidad > item.orden_compra:
-                    flash(f'Cantidad supera orden de compra en {item.producto}', 'danger')
+                if cantidad > item.en_produccion:
+                    flash(f'Cantidad supera lo en producción: {item.producto}', 'danger')
                     continue
 
                 item.stock += cantidad
-                item.orden_compra -= cantidad
+                item.en_produccion -= cantidad
 
-                db.session.add(Entrada(
+                db.session.add(Envio(
                     producto=item.producto,
                     talla=item.talla,
                     cantidad=cantidad
                 ))
 
         db.session.commit()
-        flash('Entradas registradas', 'success')
+        flash('Envíos registrados', 'success')
 
     data = BookStock.query.filter(
-        BookStock.orden_compra > 0
+        BookStock.en_produccion > 0
     ).order_by(BookStock.producto).all()
 
     return render_template('maquila.html', data=data)
@@ -222,8 +212,6 @@ def maquila():
 @rol_required('admin')
 def aumentar_minimos():
     for item in BookStock.query.all():
-        if item.minimos is None:
-            item.minimos = 0
         item.minimos += 2
     db.session.commit()
     flash('Mínimos aumentados', 'success')
