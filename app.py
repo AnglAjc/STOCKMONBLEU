@@ -186,12 +186,15 @@ def book_stock():
     return render_template('stock.html', data=data)
 
 # ================== ADMIN ==================
+# ================== ADMIN ==================
 @app.route('/admin', methods=['GET','POST'])
 @login_required
 @rol_required('admin')
 def admin():
     maquila_filtro = request.args.get('maquila')
+    q = request.args.get('q', '').strip()   # ← AÑADIDO (NO elimina nada)
 
+    # ---- ABONOS ----
     if request.method == 'POST' and request.form.get('abono_orden'):
         orden = OrdenCompra.query.get(int(request.form['abono_orden']))
         monto = float(request.form.get('nuevo_abono', 0))
@@ -202,6 +205,7 @@ def admin():
             db.session.commit()
         return redirect(url_for('admin'))
 
+    # ---- CREAR ORDEN ----
     if request.method == 'POST' and not request.form.get('abono_orden'):
         orden = OrdenCompra()
         db.session.add(orden)
@@ -243,20 +247,33 @@ def admin():
         orden.pdf = generar_pdf_orden(orden, detalles)
         db.session.commit()
 
+    # ---- QUERY STOCK ----
     query = BookStock.query
+
     if maquila_filtro:
         query = query.filter(BookStock.maquila == maquila_filtro)
+
+    if q:   # ← AÑADIDO: BUSCADOR FUNCIONAL
+        query = query.filter(
+            db.or_(
+                BookStock.producto.ilike(f'%{q}%'),
+                BookStock.categoria.ilike(f'%{q}%')
+            )
+        )
 
     return render_template(
         'admin.html',
         data=query.order_by(BookStock.producto).all(),
-        ordenes=OrdenCompra.query.order_by(OrdenCompra.fecha.desc()).all()
+        ordenes=OrdenCompra.query.order_by(OrdenCompra.fecha.desc()).all(),
+        q=q   # ← AÑADIDO para mantener texto en input
     )
+
 
 @app.route('/pdf/<nombre>')
 @login_required
 def ver_pdf(nombre):
     return send_file(os.path.join(app.config['PDF_FOLDER'], nombre))
+
 
 # ================== MAQUILA ==================
 @app.route('/maquila', methods=['GET','POST'])
