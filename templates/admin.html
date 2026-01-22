@@ -12,8 +12,9 @@
 </head>
 <body>
 
+<!-- NAVBAR -->
 <nav class="navbar navbar-dark bg-dark px-3">
-    <span class="navbar-brand">MONBLEU – Administración</span>
+    <span class="navbar-brand fw-bold">MONBLEU – Administración</span>
     <div>
         <a href="/" class="btn btn-outline-light btn-sm me-2">Stock</a>
         <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
@@ -22,11 +23,11 @@
 
 <div class="container mt-4">
 
+    <!-- ================= PRODUCTOS BAJO MÍNIMO ================= -->
     <h4 class="mb-3">📉 Productos bajo mínimo</h4>
 
     {% if data %}
     <form method="post">
-
         <table class="table table-bordered table-sm align-middle">
             <thead class="table-dark text-center">
                 <tr>
@@ -40,7 +41,7 @@
             <tbody>
                 {% for i in data %}
                 <tr class="text-center">
-                    <td class="text-start">{{ i.producto }}</td>
+                    <td class="text-start fw-semibold">{{ i.producto }}</td>
                     <td>{{ i.talla }}</td>
                     <td class="fw-bold text-danger">{{ i.stock }}</td>
                     <td>{{ i.minimos }}</td>
@@ -62,7 +63,6 @@
             💾 Actualizar producción
         </button>
     </form>
-
     {% else %}
         <div class="alert alert-success">
             ✔ No hay productos bajo mínimo
@@ -71,6 +71,116 @@
 
     <hr class="my-4">
 
+    <!-- ================= ÓRDENES DE COMPRA ================= -->
+    <h4 class="mb-3">🧾 Órdenes de compra</h4>
+
+    <!-- MAQUILA A -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">
+            Maquila A — Playeras, Pantalones y Hoodies
+        </div>
+        <div class="card-body">
+
+            {% if ordenes_maquila_a %}
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light text-center">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Talla</th>
+                        <th>Cantidad ordenada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in ordenes_maquila_a %}
+                    <tr class="text-center">
+                        <td class="text-start">{{ o.producto }}</td>
+                        <td>{{ o.talla }}</td>
+                        <td class="fw-bold">{{ o.cantidad }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <a href="/generar-pdf/maquila-a" class="btn btn-outline-primary btn-sm">
+                📄 Generar PDF Maquila A
+            </a>
+
+            {% else %}
+                <p class="text-muted">No hay órdenes pendientes.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MAQUILA B -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">
+            Maquila B — Otros productos
+        </div>
+        <div class="card-body">
+
+            {% if ordenes_maquila_b %}
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light text-center">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Talla</th>
+                        <th>Cantidad ordenada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in ordenes_maquila_b %}
+                    <tr class="text-center">
+                        <td class="text-start">{{ o.producto }}</td>
+                        <td>{{ o.talla }}</td>
+                        <td class="fw-bold">{{ o.cantidad }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <a href="/generar-pdf/maquila-b" class="btn btn-outline-primary btn-sm">
+                📄 Generar PDF Maquila B
+            </a>
+
+            {% else %}
+                <p class="text-muted">No hay órdenes pendientes.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ================= HISTORIAL PDF ================= -->
+    <h5 class="mt-4">📁 Historial de PDFs generados</h5>
+
+    {% if pdfs_generados %}
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Maquila</th>
+                <th>Archivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in pdfs_generados %}
+            <tr>
+                <td>{{ p.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ p.maquila }}</td>
+                <td>
+                    <a href="{{ p.ruta }}" target="_blank">
+                        {{ p.nombre }}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="text-muted">No hay PDFs generados.</p>
+    {% endif %}
+
+    <hr class="my-4">
+
+    <!-- ================= ÚLTIMOS ENVÍOS ================= -->
     <h5>📦 Últimos envíos registrados</h5>
 
     {% if envios %}
