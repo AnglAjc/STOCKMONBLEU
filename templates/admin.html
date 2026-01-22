@@ -20,6 +20,17 @@
 
 <h4 class="mb-3">📉 Productos bajo mínimo</h4>
 
+    
+    <!-- BUSCADOR -->
+    <form method="get" class="mb-3">
+        <input
+            type="text"
+            name="q"
+            value="{{ q or '' }}"
+            class="form-control"
+            placeholder="Buscar por producto o categoría">
+    </form>
+    
 {% if data %}
 <form method="post">
 <table class="table table-bordered table-sm align-middle">
