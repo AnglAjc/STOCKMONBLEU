@@ -196,6 +196,34 @@ def admin():
     maquila_filtro = request.args.get('maquila')
     q = request.args.get('q', '').strip()   # ← YA ESTABA, SE RESPETA
 
+
+
+    # ---- NUEVO PRODUCTO ----
+    if request.method == 'POST' and request.form.get('nuevo_producto'):
+        producto = request.form.get('producto')
+        categoria = request.form.get('categoria')
+        talla = request.form.get('talla')
+        stock = int(request.form.get('stock', 0))
+        minimos = int(request.form.get('minimos', 0))
+        precio = float(request.form.get('precio', 0))
+
+        nuevo = BookStock(
+            producto=producto,
+            categoria=categoria,
+            talla=talla,
+            stock=stock,
+            minimos=minimos,
+            precio=precio,
+            en_produccion=0,
+            maquila=maquila_por_categoria(categoria)
+        )
+
+        db.session.add(nuevo)
+        db.session.commit()
+
+        flash('Producto agregado correctamente', 'success')
+        return redirect(url_for('admin'))
+
     # ---- ABONOS ----
     if request.method == 'POST' and request.form.get('abono_orden'):
         orden = OrdenCompra.query.get(int(request.form['abono_orden']))
