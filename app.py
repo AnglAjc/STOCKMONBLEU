@@ -155,13 +155,14 @@ def generar_pdf_orden(orden, detalles):
 def utility_processor():
     def color_stock(stock, minimos, en_produccion):
         if stock < 0:
-            return 'table-purple'
+            return 'table-info'
         if stock <= minimos and en_produccion == 0:
             return 'table-danger'
         if en_produccion > 0:
             return 'table-warning'
         return 'table-success'
     return dict(color_stock=color_stock)
+
 
 # ================== LOGIN ==================
 @app.route('/login', methods=['GET','POST'])
