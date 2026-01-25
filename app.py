@@ -154,6 +154,8 @@ def generar_pdf_orden(orden, detalles):
 @app.context_processor
 def utility_processor():
     def color_stock(stock, minimos, en_produccion):
+        if stock < 0:
+            return 'table-purple'
         if stock <= minimos and en_produccion == 0:
             return 'table-danger'
         if en_produccion > 0:
