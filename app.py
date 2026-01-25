@@ -155,12 +155,12 @@ def generar_pdf_orden(orden, detalles):
 def utility_processor():
     def color_stock(stock, minimos, en_produccion):
         if stock < 0:
-            return 'table-info'
-        if stock <= minimos and en_produccion == 0:
-            return 'table-danger'
-        if en_produccion > 0:
-            return 'table-warning'
-        return 'table-success'
+            return 'table-info'                 # 🔵 negativo
+        if stock < minimos:
+            return 'table-danger'               # 🔴 debajo del mínimo
+        if stock < minimos * 2:
+            return 'table-warning'              # 🟡 entre mínimo y doble
+        return 'table-success'                  # 🟢 arriba del doble
     return dict(color_stock=color_stock)
 
 
