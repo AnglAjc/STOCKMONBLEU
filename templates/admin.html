@@ -41,12 +41,7 @@
     </thead>
     <tbody>
         {% for i in data %}
-        {% set clase =
-            'table-danger' if i.stock < i.minimos else
-            'table-warning' if i.stock <= i.minimos * 2 else
-            'table-success'
-        %}
-        <tr class="text-center {{ clase }}">
+        <tr class="text-center {{ color_stock(i.stock, i.minimos, i.en_produccion) }}">
             <td class="text-start fw-semibold">{{ i.producto }}</td>
             <td>{{ i.talla }}</td>
             <td class="fw-bold">{{ i.stock }}</td>
