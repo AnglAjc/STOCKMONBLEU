@@ -335,7 +335,12 @@ def maquila():
 def taller():
     estado = TallerEstado.query.first()
 
+    # 🔹 FILTRO MAQUILA (A por defecto)
+    maquila_filtro = request.args.get('maquila', 'A')
+
     if request.method == 'POST':
+
+        # ---------- ÚLTIMO PEDIDO ----------
         ultimo = request.form.get('ultimo_pedido', '').strip()
         if ultimo:
             if not estado:
@@ -344,26 +349,46 @@ def taller():
             else:
                 estado.ultimo_pedido = ultimo
 
+        # ---------- SALIDAS ----------
         for key, val in request.form.items():
             if key.startswith('salida_') and val:
                 item = BookStock.query.get(int(key.split('_')[1]))
-                item.stock -= int(val)
+                cantidad = int(val)
+
+                item.stock -= cantidad
+
                 db.session.add(
                     Salida(
                         producto=item.producto,
                         talla=item.talla,
-                        cantidad=int(val)
+                        cantidad=cantidad
                     )
                 )
 
+        # ---------- ENTRADAS (NUEVO) ----------
+        for key, val in request.form.items():
+            if key.startswith('entrada_') and val:
+                item = BookStock.query.get(int(key.split('_')[1]))
+                cantidad = int(val)
+
+                item.stock += cantidad
+
         db.session.commit()
 
-    data = BookStock.query.order_by(BookStock.producto).all()
+    # 🔹 STOCK FILTRADO POR MAQUILA
+    data = (
+        BookStock.query
+        .filter(BookStock.maquila == maquila_filtro)
+        .order_by(BookStock.producto)
+        .all()
+    )
+
     return render_template(
         'taller.html',
         data=data,
         estado=estado,
-        ultimo_pedido=estado.ultimo_pedido if estado else None
+        ultimo_pedido=estado.ultimo_pedido if estado else None,
+        maquila_filtro=maquila_filtro
     )
 
 # ================== INIT ==================
