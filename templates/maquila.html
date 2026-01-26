@@ -37,8 +37,13 @@
             </thead>
             <tbody>
                 {% for i in data %}
-                <!-- ⬇️ SOLO se agrega la clase fila-click -->
-                <tr class="text-center fila-click">
+                <!-- 🔹 FUNCIONALIDAD AGREGADA (NO se elimina nada) -->
+                <tr class="text-center"
+                    style="cursor:pointer"
+                    onmouseover="hoverFila(this)"
+                    onmouseout="unhoverFila(this)"
+                    onclick="toggleFila(this)">
+                    
                     <td class="text-start fw-semibold">{{ i.producto }}</td>
                     <td>{{ i.talla }}</td>
                     <td class="fw-bold {{ color_stock(i.stock, i.minimos, i.en_produccion) }}">
@@ -52,7 +57,9 @@
                             class="form-control form-control-sm text-center"
                             min="0"
                             max="{{ i.en_produccion }}"
-                            placeholder="0">
+                            placeholder="0"
+                            onclick="event.stopPropagation()"
+                            oninput="autoSeleccion(this)">
                     </td>
                 </tr>
                 {% endfor %}
@@ -97,68 +104,41 @@
 
 </div>
 
-<!-- ✅ SCRIPT AGREGADO (NO TOCA CSS) -->
+<!-- ✅ SCRIPT PURO (SIN TOCAR CSS) -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    document.querySelectorAll('.fila-click').forEach(fila => {
-
-        // Cursor tipo tabla admin
-        fila.style.cursor = "pointer";
-
-        // ----- HOVER -----
-        fila.addEventListener('mouseenter', () => {
-            if (fila.dataset.seleccionada !== "1") {
-                fila.style.background = "#e9ecef";
-            }
-        });
-
-        fila.addEventListener('mouseleave', () => {
-            if (fila.dataset.seleccionada !== "1") {
-                fila.style.background = "";
-            }
-        });
-
-        // ----- CLICK -----
-        fila.addEventListener('click', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            toggleFila(fila);
-        });
-
-        // ----- INPUT AUTO-SELECCIÓN -----
-        const input = fila.querySelector('input[type="number"]');
-        if (input) {
-            input.addEventListener('input', () => {
-                if (parseInt(input.value) > 0) {
-                    marcarFila(fila);
-                } else {
-                    desmarcarFila(fila);
-                }
-            });
-        }
-    });
-
-    function marcarFila(fila) {
-        fila.dataset.seleccionada = "1";
-        fila.style.background = "#cfe2ff"; // azul tipo admin
+function hoverFila(fila) {
+    if (fila.dataset.sel !== "1") {
+        fila.style.backgroundColor = "#e9ecef"; // hover gris
     }
+}
 
-    function desmarcarFila(fila) {
-        fila.dataset.seleccionada = "0";
-        fila.style.background = "";
+function unhoverFila(fila) {
+    if (fila.dataset.sel !== "1") {
+        fila.style.backgroundColor = "";
     }
+}
 
-    function toggleFila(fila) {
-        fila.dataset.seleccionada === "1"
-            ? desmarcarFila(fila)
-            : marcarFila(fila);
+function toggleFila(fila) {
+    if (fila.dataset.sel === "1") {
+        fila.dataset.sel = "0";
+        fila.style.backgroundColor = "";
+    } else {
+        fila.dataset.sel = "1";
+        fila.style.backgroundColor = "#cfe2ff"; // azul seleccionado
     }
+}
 
-});
+function autoSeleccion(input) {
+    const fila = input.closest("tr");
+    if (parseInt(input.value) > 0) {
+        fila.dataset.sel = "1";
+        fila.style.backgroundColor = "#cfe2ff";
+    } else {
+        fila.dataset.sel = "0";
+        fila.style.backgroundColor = "";
+    }
+}
 </script>
-
-
-
 
 </body>
 </html>
