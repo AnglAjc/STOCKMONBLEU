@@ -34,18 +34,16 @@
 
 <div class="container mt-4">
 
-    <!-- BUSCADOR -->
-    <form method="get" class="mb-3">
-        <input
-            type="text"
-            name="q"
-            value="{{ q or '' }}"
-            class="form-control"
-            placeholder="Buscar por producto o categoría">
-    </form>
+    <!-- 🔍 BUSCADOR EN TIEMPO REAL -->
+    <input
+        type="text"
+        id="buscador-stock"
+        class="form-control mb-3"
+        placeholder="Buscar por producto o talla..."
+    >
 
     <!-- TABLA STOCK -->
-    <table class="table table-bordered table-sm align-middle">
+    <table class="table table-bordered table-sm align-middle" id="tabla-stock">
         <thead class="table-dark text-center">
             <tr>
                 <th>Producto</th>
@@ -69,6 +67,20 @@
     </table>
 
 </div>
+
+<!-- 🔎 SCRIPT BUSCADOR -->
+<script>
+document.getElementById('buscador-stock').addEventListener('keyup', function () {
+    const texto = this.value.toLowerCase();
+    const filas = document.querySelectorAll('#tabla-stock tbody tr');
+
+    filas.forEach(fila => {
+        fila.style.display = fila.innerText.toLowerCase().includes(texto)
+            ? ''
+            : 'none';
+    });
+});
+</script>
 
 </body>
 </html>
