@@ -279,7 +279,6 @@ def admin():
 
     # ---- QUERY STOCK ----
     query = BookStock.query.filter(
-        BookStock.stock < BookStock.minimos,
         BookStock.en_produccion == 0   # 🔥 CLAVE: ya pedidos NO aparecen
     )
 
