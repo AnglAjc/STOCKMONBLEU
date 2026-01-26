@@ -24,7 +24,7 @@
         </div>
     {% endif %}
 
-    <!-- 🔹 FILTRO MAQUILA -->
+    <!-- FILTRO MAQUILA -->
     <div class="mb-3">
         <a href="?maquila=A"
            class="btn btn-sm {{ 'btn-primary' if maquila_filtro == 'A' else 'btn-outline-primary' }}">
@@ -54,7 +54,14 @@
         <!-- ================= SALIDAS ================= -->
         <h4 class="mb-2">🛠 Salidas de Taller</h4>
 
-        <table class="table table-bordered table-sm align-middle">
+        <input
+            type="text"
+            id="buscador-salidas"
+            class="form-control mb-3"
+            placeholder="Buscar en salidas..."
+        >
+
+        <table class="table table-bordered table-sm align-middle" id="tabla-salidas">
             <thead class="table-dark text-center">
                 <tr>
                     <th>Producto</th>
@@ -65,23 +72,12 @@
             </thead>
             <tbody>
                 {% for i in data %}
-                <tr class="text-center">
-                    <td class="text-start fw-semibold">{{ i.producto }}</td>
+                <tr>
+                    <td class="fw-semibold">{{ i.producto }}</td>
                     <td>{{ i.talla }}</td>
-
-                    {% if i.stock < i.minimos %}
-                        <td class="fw-bold text-danger">{{ i.stock }}</td>
-                    {% else %}
-                        <td class="fw-bold">{{ i.stock }}</td>
-                    {% endif %}
-
+                    <td class="fw-bold">{{ i.stock }}</td>
                     <td>
-                        <input
-                            type="number"
-                            name="salida_{{ i.id }}"
-                            class="form-control form-control-sm text-center"
-                            min="0"
-                            placeholder="0">
+                        <input type="number" name="salida_{{ i.id }}" class="form-control form-control-sm text-center" min="0">
                     </td>
                 </tr>
                 {% endfor %}
@@ -91,41 +87,60 @@
         <!-- ================= ENTRADAS ================= -->
         <h4 class="mb-2 mt-4">📥 Entradas a Taller</h4>
 
-        <table class="table table-bordered table-sm align-middle">
+        <input
+            type="text"
+            id="buscador-entradas"
+            class="form-control mb-3"
+            placeholder="Buscar en entradas..."
+        >
+
+        <table class="table table-bordered table-sm align-middle" id="tabla-entradas">
             <thead class="table-success text-center">
                 <tr>
                     <th>Producto</th>
                     <th>Talla</th>
-                    <th>Stock actual</th>
+                    <th>Stock</th>
                     <th>Entrada</th>
                 </tr>
             </thead>
             <tbody>
                 {% for i in data %}
-                <tr class="text-center">
-                    <td class="text-start fw-semibold">{{ i.producto }}</td>
+                <tr>
+                    <td class="fw-semibold">{{ i.producto }}</td>
                     <td>{{ i.talla }}</td>
                     <td class="fw-bold">{{ i.stock }}</td>
                     <td>
-                        <input
-                            type="number"
-                            name="entrada_{{ i.id }}"
-                            class="form-control form-control-sm text-center"
-                            min="0"
-                            placeholder="0">
+                        <input type="number" name="entrada_{{ i.id }}" class="form-control form-control-sm text-center" min="0">
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <button class="btn btn-success">
+        <button class="btn btn-success mt-3">
             💾 Guardar movimientos
         </button>
 
     </form>
-
 </div>
+
+<!-- BUSCADORES -->
+<script>
+function filtrar(inputId, tablaId) {
+    const input = document.getElementById(inputId);
+    const filas = document.querySelectorAll(`#${tablaId} tbody tr`);
+
+    input.addEventListener('keyup', () => {
+        const texto = input.value.toLowerCase();
+        filas.forEach(fila => {
+            fila.style.display = fila.innerText.toLowerCase().includes(texto) ? '' : 'none';
+        });
+    });
+}
+
+filtrar('buscador-salidas', 'tabla-salidas');
+filtrar('buscador-entradas', 'tabla-entradas');
+</script>
 
 </body>
 </html>
