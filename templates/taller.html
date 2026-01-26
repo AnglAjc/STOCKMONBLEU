@@ -33,6 +33,24 @@
 
     <form method="post">
 
+        <!-- 🔹 NUEVO: ÚLTIMO PEDIDO MANUAL -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <label class="form-label fw-semibold">
+                    📌 Último pedido atendido (ingresar manualmente)
+                </label>
+                <input
+                    type="text"
+                    name="ultimo_pedido"
+                    class="form-control"
+                    placeholder="Ej. OC-145 / Pedido Juan / Folio 2026-01"
+                >
+                <small class="text-muted">
+                    Este dato se guarda al registrar las salidas.
+                </small>
+            </div>
+        </div>
+
         <table class="table table-bordered table-sm align-middle">
             <thead class="table-dark text-center">
                 <tr>
