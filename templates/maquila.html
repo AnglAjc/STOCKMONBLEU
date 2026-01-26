@@ -99,58 +99,64 @@
 
 <!-- ✅ SCRIPT AGREGADO (NO TOCA CSS) -->
 <script>
-document.querySelectorAll('.fila-click').forEach(fila => {
+document.addEventListener('DOMContentLoaded', function () {
 
-    // ----- HOVER -----
-    fila.addEventListener('mouseenter', () => {
-        if (fila.dataset.seleccionada !== "1") {
-            fila.style.backgroundColor = "#e9ecef"; // gris hover
-        }
-    });
+    document.querySelectorAll('.fila-click').forEach(fila => {
 
-    fila.addEventListener('mouseleave', () => {
-        if (fila.dataset.seleccionada !== "1") {
-            fila.style.backgroundColor = "";
-        }
-    });
+        // Cursor tipo tabla admin
+        fila.style.cursor = "pointer";
 
-    // ----- CLICK -----
-    fila.addEventListener('click', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        toggleFila(fila);
-    });
-
-    // ----- INPUT AUTO-SELECCIÓN -----
-    const input = fila.querySelector('input[type="number"]');
-    if (input) {
-        input.addEventListener('input', () => {
-            if (parseInt(input.value) > 0) {
-                marcarFila(fila);
-            } else {
-                desmarcarFila(fila);
+        // ----- HOVER -----
+        fila.addEventListener('mouseenter', () => {
+            if (fila.dataset.seleccionada !== "1") {
+                fila.style.background = "#e9ecef";
             }
         });
+
+        fila.addEventListener('mouseleave', () => {
+            if (fila.dataset.seleccionada !== "1") {
+                fila.style.background = "";
+            }
+        });
+
+        // ----- CLICK -----
+        fila.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            toggleFila(fila);
+        });
+
+        // ----- INPUT AUTO-SELECCIÓN -----
+        const input = fila.querySelector('input[type="number"]');
+        if (input) {
+            input.addEventListener('input', () => {
+                if (parseInt(input.value) > 0) {
+                    marcarFila(fila);
+                } else {
+                    desmarcarFila(fila);
+                }
+            });
+        }
+    });
+
+    function marcarFila(fila) {
+        fila.dataset.seleccionada = "1";
+        fila.style.background = "#cfe2ff"; // azul tipo admin
     }
+
+    function desmarcarFila(fila) {
+        fila.dataset.seleccionada = "0";
+        fila.style.background = "";
+    }
+
+    function toggleFila(fila) {
+        fila.dataset.seleccionada === "1"
+            ? desmarcarFila(fila)
+            : marcarFila(fila);
+    }
+
 });
-
-function marcarFila(fila) {
-    fila.dataset.seleccionada = "1";
-    fila.style.backgroundColor = "#cfe2ff"; // azul seleccionado
-}
-
-function desmarcarFila(fila) {
-    fila.dataset.seleccionada = "0";
-    fila.style.backgroundColor = "";
-}
-
-function toggleFila(fila) {
-    if (fila.dataset.seleccionada === "1") {
-        desmarcarFila(fila);
-    } else {
-        marcarFila(fila);
-    }
-}
 </script>
+
 
 
 
