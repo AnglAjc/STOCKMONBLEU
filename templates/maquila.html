@@ -101,11 +101,26 @@
 <script>
 document.querySelectorAll('.fila-click').forEach(fila => {
 
+    // ----- HOVER -----
+    fila.addEventListener('mouseenter', () => {
+        if (fila.dataset.seleccionada !== "1") {
+            fila.style.backgroundColor = "#e9ecef"; // gris hover
+        }
+    });
+
+    fila.addEventListener('mouseleave', () => {
+        if (fila.dataset.seleccionada !== "1") {
+            fila.style.backgroundColor = "";
+        }
+    });
+
+    // ----- CLICK -----
     fila.addEventListener('click', (e) => {
         if (e.target.tagName === 'INPUT') return;
         toggleFila(fila);
     });
 
+    // ----- INPUT AUTO-SELECCIÓN -----
     const input = fila.querySelector('input[type="number"]');
     if (input) {
         input.addEventListener('input', () => {
@@ -120,13 +135,11 @@ document.querySelectorAll('.fila-click').forEach(fila => {
 
 function marcarFila(fila) {
     fila.dataset.seleccionada = "1";
-    fila.style.textDecoration = "underline";
-    fila.style.backgroundColor = "#cfe2ff";   // 🔵 COLOR LLAMATIVO
+    fila.style.backgroundColor = "#cfe2ff"; // azul seleccionado
 }
 
 function desmarcarFila(fila) {
     fila.dataset.seleccionada = "0";
-    fila.style.textDecoration = "none";
     fila.style.backgroundColor = "";
 }
 
@@ -138,6 +151,7 @@ function toggleFila(fila) {
     }
 }
 </script>
+
 
 
 </body>
