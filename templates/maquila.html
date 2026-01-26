@@ -45,7 +45,9 @@
                     <td class="fw-bold {{ color_stock(i.stock, i.minimos, i.en_produccion) }}">
                         {{ i.stock }}
                     </td>
-                    <td class="fw-bold text-warning">{{ i.en_produccion }}</td>
+<td class="fw-bold {% if i.en_produccion > 0 %}text-warning{% endif %}">
+    {{ i.en_produccion }}
+</td>
                     <td>
                         <input
                             type="number"
