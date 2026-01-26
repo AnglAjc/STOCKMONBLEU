@@ -37,12 +37,8 @@
             </thead>
             <tbody>
                 {% for i in data %}
-                <!-- 🔹 FUNCIONALIDAD AGREGADA (NO se elimina nada) -->
-                <tr class="text-center"
-                    style="cursor:pointer"
-                    onmouseover="hoverFila(this)"
-                    onmouseout="unhoverFila(this)"
-                    onclick="toggleFila(this)">
+                <!-- ✅ CLASE AGREGADA -->
+                <tr class="text-center fila-click">
                     
                     <td class="text-start fw-semibold">{{ i.producto }}</td>
                     <td>{{ i.talla }}</td>
@@ -57,9 +53,7 @@
                             class="form-control form-control-sm text-center"
                             min="0"
                             max="{{ i.en_produccion }}"
-                            placeholder="0"
-                            onclick="event.stopPropagation()"
-                            oninput="autoSeleccion(this)">
+                            placeholder="0">
                     </td>
                 </tr>
                 {% endfor %}
@@ -104,40 +98,75 @@
 
 </div>
 
-<!-- ✅ SCRIPT PURO (SIN TOCAR CSS) -->
+<!-- ✅ SCRIPT FUNCIONAL (BOOTSTRAP SAFE) -->
 <script>
-function hoverFila(fila) {
-    if (fila.dataset.sel !== "1") {
-        fila.style.backgroundColor = "#e9ecef"; // hover gris
-    }
-}
+document.addEventListener('DOMContentLoaded', () => {
 
-function unhoverFila(fila) {
-    if (fila.dataset.sel !== "1") {
-        fila.style.backgroundColor = "";
-    }
-}
+    document.querySelectorAll('.fila-click').forEach(fila => {
 
-function toggleFila(fila) {
-    if (fila.dataset.sel === "1") {
-        fila.dataset.sel = "0";
-        fila.style.backgroundColor = "";
-    } else {
-        fila.dataset.sel = "1";
-        fila.style.backgroundColor = "#cfe2ff"; // azul seleccionado
-    }
-}
+        fila.style.cursor = 'pointer';
+        const celdas = fila.querySelectorAll('td');
 
-function autoSeleccion(input) {
-    const fila = input.closest("tr");
-    if (parseInt(input.value) > 0) {
-        fila.dataset.sel = "1";
-        fila.style.backgroundColor = "#cfe2ff";
-    } else {
-        fila.dataset.sel = "0";
-        fila.style.backgroundColor = "";
+        // HOVER
+        fila.addEventListener('mouseenter', () => {
+            if (fila.dataset.sel !== '1') {
+                celdas.forEach(td => {
+                    td.style.setProperty(
+                        'background-color',
+                        '#e3f2fd',
+                        'important'
+                    );
+                });
+            }
+        });
+
+        fila.addEventListener('mouseleave', () => {
+            if (fila.dataset.sel !== '1') {
+                celdas.forEach(td => td.style.backgroundColor = '');
+            }
+        });
+
+        // CLICK
+        fila.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+
+            fila.dataset.sel === '1'
+                ? desmarcar(fila)
+                : marcar(fila);
+        });
+
+        // INPUT AUTO-SELECCIÓN
+        const input = fila.querySelector('input[type="number"]');
+        if (input) {
+            input.addEventListener('input', () => {
+                parseInt(input.value) > 0
+                    ? marcar(fila)
+                    : desmarcar(fila);
+            });
+        }
+    });
+
+    function marcar(fila) {
+        fila.dataset.sel = '1';
+        fila.querySelectorAll('td').forEach(td => {
+            td.style.setProperty(
+                'background-color',
+                '#bbdefb',
+                'important'
+            );
+            td.style.textDecoration = 'underline';
+        });
     }
-}
+
+    function desmarcar(fila) {
+        fila.dataset.sel = '0';
+        fila.querySelectorAll('td').forEach(td => {
+            td.style.backgroundColor = '';
+            td.style.textDecoration = '';
+        });
+    }
+
+});
 </script>
 
 </body>
