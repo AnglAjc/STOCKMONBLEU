@@ -19,15 +19,15 @@
 
 <h4 class="mb-3">📉 Productos bajo mínimo</h4>
 
-<!-- 🔍 FILTRO BUSCADOR + MAQUILA -->
-<form method="get" class="row g-2 mb-3">
+<!-- 🔍 FILTRO BACKEND (MAQUILA) -->
+<form method="get" class="row g-2 mb-2">
     <div class="col-md-6">
         <input
             type="text"
             name="q"
             value="{{ q or '' }}"
             class="form-control"
-            placeholder="Buscar por producto o categoría">
+            placeholder="Buscar por producto o categoría (backend)">
     </div>
 
     <div class="col-md-3">
@@ -49,10 +49,18 @@
     </div>
 </form>
 
+<!-- 🔍 BUSCADOR EN TIEMPO REAL (JS) -->
+<input
+    type="text"
+    id="buscador-admin"
+    class="form-control mb-3"
+    placeholder="Buscar en la tabla (tiempo real)…"
+>
+
 {% if data %}
 <form method="post" id="ordenForm">
 
-<table class="table table-bordered table-sm align-middle">
+<table class="table table-bordered table-sm align-middle" id="tabla-admin">
     <thead class="table-dark text-center">
         <tr>
             <th>Producto</th>
@@ -71,16 +79,19 @@
             <td>{{ i.talla }}</td>
             <td class="fw-bold">{{ i.stock }}</td>
             <td>{{ i.minimos }}</td>
-            <td class="fw-bold text-warning">{{ i.en_produccion }}</td>
+            <td class="fw-bold {{ 'text-warning' if i.en_produccion > 0 else '' }}">
+                {{ i.en_produccion }}
+            </td>
             <td class="precio" data-precio="{{ i.precio }}">
                 ${{ "%.2f"|format(i.precio) }}
             </td>
             <td>
-                <input type="number"
-                       class="form-control form-control-sm text-center orden-input"
-                       name="orden_{{ i.id }}"
-                       min="0"
-                       value="0">
+                <input
+                    type="number"
+                    class="form-control form-control-sm text-center orden-input"
+                    name="orden_{{ i.id }}"
+                    min="0"
+                    value="0">
             </td>
         </tr>
         {% endfor %}
@@ -112,49 +123,32 @@
 
 <hr class="my-4">
 
-
 <h4 class="mt-4">➕ Agregar nuevo producto</h4>
 
 <form method="post" class="row g-2 mb-4">
-
     <input type="hidden" name="nuevo_producto" value="1">
 
     <div class="col-md-3">
-        <input class="form-control" name="producto"
-               placeholder="Producto" required>
+        <input class="form-control" name="producto" placeholder="Producto" required>
     </div>
-
     <div class="col-md-2">
-        <input class="form-control" name="categoria"
-               placeholder="Categoría" required>
+        <input class="form-control" name="categoria" placeholder="Categoría" required>
     </div>
-
     <div class="col-md-1">
-        <input class="form-control" name="talla"
-               placeholder="Talla" required>
+        <input class="form-control" name="talla" placeholder="Talla" required>
     </div>
-
     <div class="col-md-1">
-        <input type="number" class="form-control"
-               name="stock" placeholder="Stock" value="0">
+        <input type="number" class="form-control" name="stock" value="0">
     </div>
-
     <div class="col-md-1">
-        <input type="number" class="form-control"
-               name="minimos" placeholder="Mínimo" value="0">
+        <input type="number" class="form-control" name="minimos" value="0">
     </div>
-
     <div class="col-md-2">
-        <input type="number" step="0.01" class="form-control"
-               name="precio" placeholder="Precio">
+        <input type="number" step="0.01" class="form-control" name="precio">
     </div>
-
     <div class="col-md-2 d-grid">
-        <button class="btn btn-success">
-            ➕ Agregar
-        </button>
+        <button class="btn btn-success">➕ Agregar</button>
     </div>
-
 </form>
 
 <hr class="my-4">
@@ -181,11 +175,7 @@
             <td>${{ "%.2f"|format(o.total) }}</td>
             <td>${{ "%.2f"|format(o.abonado) }}</td>
             <td class="fw-bold {{ 'text-success' if o.saldo <= 0 else 'text-danger' }}">
-                {% if o.saldo <= 0 %}
-                    PAGADO
-                {% else %}
-                    ${{ "%.2f"|format(o.saldo) }}
-                {% endif %}
+                {{ 'PAGADO' if o.saldo <= 0 else '$' ~ "%.2f"|format(o.saldo) }}
             </td>
             <td>
                 {% if o.pdf %}
@@ -211,17 +201,28 @@
 
 </div>
 
+<!-- 🔎 BUSCADOR + TOTAL -->
 <script>
+/* ===== BUSCADOR EN TIEMPO REAL ===== */
+document.getElementById('buscador-admin').addEventListener('keyup', function () {
+    const texto = this.value.toLowerCase();
+    document.querySelectorAll('#tabla-admin tbody tr').forEach(fila => {
+        fila.style.display = fila.innerText.toLowerCase().includes(texto)
+            ? ''
+            : 'none';
+    });
+});
+
+/* ===== TOTAL ESTIMADO ===== */
 const inputs = document.querySelectorAll('.orden-input');
 const precios = document.querySelectorAll('.precio');
 const totalInput = document.getElementById('totalEstimado');
 
 function calcularTotal() {
     let total = 0;
-    inputs.forEach((input, index) => {
-        const cantidad = parseInt(input.value) || 0;
-        const precio = parseFloat(precios[index].dataset.precio) || 0;
-        total += cantidad * precio;
+    inputs.forEach((input, i) => {
+        total += (parseInt(input.value) || 0) *
+                 (parseFloat(precios[i].dataset.precio) || 0);
     });
     totalInput.value = '$' + total.toFixed(2);
 }
