@@ -21,14 +21,7 @@
 
 <!-- 🔍 FILTRO BACKEND (MAQUILA) -->
 <form method="get" class="row g-2 mb-2">
-    <div class="col-md-6">
-        <input
-            type="text"
-            name="q"
-            value="{{ q or '' }}"
-            class="form-control"
-            placeholder="Buscar por producto o categoría (backend)">
-    </div>
+   
 
     <div class="col-md-3">
         <select name="maquila" class="form-select" onchange="this.form.submit()">
@@ -123,7 +116,7 @@
 
 <hr class="my-4">
 
-<h4 class="mt-4">➕ Agregar nuevo producto</h4>
+<h4 class="mt-4">➕ Agregar nuevo producto (nombre, categoria, talla, stock, minimo y precio)</h4>
 
 <form method="post" class="row g-2 mb-4">
     <input type="hidden" name="nuevo_producto" value="1">
