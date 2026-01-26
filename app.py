@@ -336,24 +336,35 @@ def taller():
     estado = TallerEstado.query.first()
 
     if request.method == 'POST':
-        ultimo = request.form.get('ultimo_pedido')
-        if ultimo is not None:
+        ultimo = request.form.get('ultimo_pedido', '').strip()
+        if ultimo:
             if not estado:
                 estado = TallerEstado(ultimo_pedido=ultimo)
                 db.session.add(estado)
             else:
                 estado.ultimo_pedido = ultimo
 
-        for key,val in request.form.items():
+        for key, val in request.form.items():
             if key.startswith('salida_') and val:
                 item = BookStock.query.get(int(key.split('_')[1]))
                 item.stock -= int(val)
-                db.session.add(Salida(producto=item.producto, talla=item.talla, cantidad=int(val)))
+                db.session.add(
+                    Salida(
+                        producto=item.producto,
+                        talla=item.talla,
+                        cantidad=int(val)
+                    )
+                )
 
         db.session.commit()
 
     data = BookStock.query.order_by(BookStock.producto).all()
-    return render_template('taller.html', data=data, estado=estado)
+    return render_template(
+        'taller.html',
+        data=data,
+        estado=estado,
+        ultimo_pedido=estado.ultimo_pedido if estado else None
+    )
 
 # ================== INIT ==================
 @app.route('/init-db')
