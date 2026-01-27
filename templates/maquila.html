@@ -24,8 +24,16 @@
 
     <h4 class="mb-3">🏭 Registrar productos enviados</h4>
 
+    <!-- 🔍 BUSCADOR (IGUAL AL DE STOCK) -->
+    <input
+        type="text"
+        id="buscador-stock"
+        class="form-control mb-3"
+        placeholder="Buscar por producto o talla..."
+    >
+
     <form method="post">
-        <table class="table table-bordered table-sm align-middle">
+        <table class="table table-bordered table-sm align-middle" id="tabla-stock">
             <thead class="table-dark text-center">
                 <tr>
                     <th>Producto</th>
@@ -37,7 +45,6 @@
             </thead>
             <tbody>
                 {% for i in data %}
-                <!-- ✅ CLASE AGREGADA -->
                 <tr class="text-center fila-click">
                     
                     <td class="text-start fw-semibold">{{ i.producto }}</td>
@@ -45,9 +52,9 @@
                     <td class="fw-bold {{ color_stock(i.stock, i.minimos, i.en_produccion) }}">
                         {{ i.stock }}
                     </td>
-<td class="fw-bold {% if i.en_produccion > 0 %}text-warning{% endif %}">
-    {{ i.en_produccion }}
-</td>
+                    <td class="fw-bold {% if i.en_produccion > 0 %}text-warning{% endif %}">
+                        {{ i.en_produccion }}
+                    </td>
                     <td>
                         <input
                             type="number"
@@ -100,7 +107,21 @@
 
 </div>
 
-<!-- ✅ SCRIPT FUNCIONAL (BOOTSTRAP SAFE) -->
+<!-- 🔎 BUSCADOR EN TIEMPO REAL -->
+<script>
+document.getElementById('buscador-stock').addEventListener('keyup', function () {
+    const texto = this.value.toLowerCase();
+    const filas = document.querySelectorAll('#tabla-stock tbody tr');
+
+    filas.forEach(fila => {
+        fila.style.display = fila.innerText.toLowerCase().includes(texto)
+            ? ''
+            : 'none';
+    });
+});
+</script>
+
+<!-- ✅ SCRIPT DE HOVER / SELECCIÓN (TUYO, INTACTO) -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -109,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fila.style.cursor = 'pointer';
         const celdas = fila.querySelectorAll('td');
 
-        // HOVER
         fila.addEventListener('mouseenter', () => {
             if (fila.dataset.sel !== '1') {
                 celdas.forEach(td => {
@@ -128,16 +148,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // CLICK
         fila.addEventListener('click', (e) => {
             if (e.target.tagName === 'INPUT') return;
-
             fila.dataset.sel === '1'
                 ? desmarcar(fila)
                 : marcar(fila);
         });
 
-        // INPUT AUTO-SELECCIÓN
         const input = fila.querySelector('input[type="number"]');
         if (input) {
             input.addEventListener('input', () => {
