@@ -320,7 +320,7 @@ def maquila():
                 cantidad = int(val)
 
                 # 🔁 CAMBIO: ahora SUMA a en_produccion
-                item.en_produccion += cantidad
+                item.en_produccion -= cantidad
                 item.stock += cantidad
 
                 db.session.add(
