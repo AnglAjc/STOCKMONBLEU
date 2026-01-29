@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import case
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
@@ -65,6 +66,18 @@ class BookStock(db.Model):
     en_produccion = db.Column(db.Integer, default=0)
     precio = db.Column(db.Float, default=0)
     maquila = db.Column(db.String(1))  # A o B
+
+# ================== ORDEN DE TALLAS ==================
+orden_tallas = case(
+    (BookStock.talla == 'XS', 0),
+    (BookStock.talla == 'S', 1),
+    (BookStock.talla == 'M', 2),
+    (BookStock.talla == 'L', 3),
+    (BookStock.talla == 'XL', 4),
+    (BookStock.talla == 'XXL', 5),
+    else_=99
+)
+
 
 class OrdenCompra(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -185,8 +198,10 @@ def logout():
 @app.route('/')
 @login_required
 def book_stock():
-    data = BookStock.query.order_by(BookStock.producto).all()
+    data = BookStock.query.order_by(BookStock.producto, orden_tallas).all()
     return render_template('stock.html', data=data)
+    
+
 
 # ================== ADMIN ==================
 @app.route('/admin', methods=['GET','POST'])
@@ -295,7 +310,7 @@ def admin():
 
     return render_template(
         'admin.html',
-        data=query.order_by(BookStock.producto).all(),
+        data=query.order_by(BookStock.producto, orden_tallas).all(),
         ordenes=OrdenCompra.query.order_by(OrdenCompra.fecha.desc()).all(),
         q=q
     )
@@ -319,7 +334,6 @@ def maquila():
                 item = BookStock.query.get(int(key.split('_')[1]))
                 cantidad = int(val)
 
-                # 🔁 CAMBIO: ahora SUMA a en_produccion
                 item.en_produccion -= cantidad
                 item.stock += cantidad
 
@@ -337,7 +351,7 @@ def maquila():
         BookStock.query
         .filter(BookStock.maquila == 'A')
         .filter(BookStock.categoria != 'accesorios')
-        .order_by(BookStock.producto)
+        .order_by(BookStock.producto, orden_tallas)
         .all()
     )
 
@@ -402,7 +416,7 @@ def taller():
     data = (
         BookStock.query
         .filter(BookStock.maquila == maquila_filtro)
-        .order_by(BookStock.producto)
+        .order_by(BookStock.producto, orden_tallas)
         .all()
     )
 
