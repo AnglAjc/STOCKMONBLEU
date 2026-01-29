@@ -314,19 +314,42 @@ def ver_pdf(nombre):
 @rol_required('maquila')
 def maquila():
     if request.method == 'POST':
-        for key,val in request.form.items():
+        for key, val in request.form.items():
             if key.startswith('envio_') and val:
                 item = BookStock.query.get(int(key.split('_')[1]))
                 cantidad = int(val)
-                item.en_produccion -= cantidad
+
+                # 🔁 CAMBIO: ahora SUMA a en_produccion
+                item.en_produccion += cantidad
                 item.stock += cantidad
-                db.session.add(Envio(producto=item.producto, talla=item.talla, cantidad=cantidad))
+
+                db.session.add(
+                    Envio(
+                        producto=item.producto,
+                        talla=item.talla,
+                        cantidad=cantidad
+                    )
+                )
         db.session.commit()
 
-    data = BookStock.query.filter(BookStock.maquila == 'A').order_by(BookStock.producto).all()
-    ordenes = OrdenCompra.query.filter_by(maquila='A').order_by(OrdenCompra.fecha.desc()).all()
+    # 🚫 EXCLUIR ACCESORIOS
+    data = (
+        BookStock.query
+        .filter(BookStock.maquila == 'A')
+        .filter(BookStock.categoria != 'accesorios')
+        .order_by(BookStock.producto)
+        .all()
+    )
+
+    ordenes = (
+        OrdenCompra.query
+        .filter_by(maquila='A')
+        .order_by(OrdenCompra.fecha.desc())
+        .all()
+    )
 
     return render_template('maquila.html', data=data, ordenes=ordenes)
+
 
 # ================== TALLER ==================
 @app.route('/taller', methods=['GET','POST'])
