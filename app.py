@@ -292,6 +292,8 @@ def admin():
         orden.pdf = generar_pdf_orden(orden, detalles)
         db.session.commit()
 
+    query = BookStock.query
+
 
     if maquila_filtro:
         query = query.filter(BookStock.maquila == maquila_filtro)
