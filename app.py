@@ -2,8 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from dotenv import load_dotenv
 import os
 import subprocess
+
+load_dotenv()
 
 # ================== CONFIG ==================
 def _normalize_database_url(url):
@@ -22,6 +25,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = _normalize_database_url(
     )
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# pg8000 requiere ssl_context en connect_args en vez de parámetro en la URL
+_db_url = app.config['SQLALCHEMY_DATABASE_URI'] or ''
+if 'pg8000' in _db_url:
+    import ssl as _ssl
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'connect_args': {'ssl_context': _ssl.create_default_context()}
+    }
 
 db = SQLAlchemy(app)
 
