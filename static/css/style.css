@@ -219,43 +219,29 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--navy-blue) 0%, #1e3a8a 100%);
+    background: #f8fafc;
+    background-image: 
+        radial-gradient(at 50% 0%, hsla(217, 100%, 86%, 0.4) 0px, transparent 60%),
+        radial-gradient(at 100% 100%, hsla(210, 100%, 92%, 0.6) 0px, transparent 60%);
     position: relative;
-    overflow: hidden;
-}
-
-.login-wrapper::before {
-    content: '';
-    position: absolute;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
-    top: -50%;
-    left: -50%;
-    animation: rotate 60s linear infinite;
-}
-
-@keyframes rotate {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    padding: 20px;
 }
 
 .login-card {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 3rem;
+    background: white;
+    padding: 3.5rem 2.5rem;
     border-radius: 20px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 40px -10px rgba(11, 25, 44, 0.1), 0 0 0 1px rgba(11, 25, 44, 0.03);
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     z-index: 10;
-    backdrop-filter: blur(20px);
 }
 
 .login-logo {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     color: var(--navy-blue);
     font-weight: 800;
-    font-size: 2rem;
-    letter-spacing: -1px;
+    font-size: 2.2rem;
+    letter-spacing: -1.5px;
 }
