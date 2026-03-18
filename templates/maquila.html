@@ -2,191 +2,80 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Maquila</title>
-
-    <!-- Bootstrap -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maquila | MONBLEU</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- CSS propio -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
 <nav class="navbar navbar-dark bg-dark px-3">
-    <span class="navbar-brand fw-bold">MONBLEU – Maquila</span>
-    <div>
-        <a href="/" class="btn btn-outline-light btn-sm me-2">Stock</a>
-        <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
+    <span class="navbar-brand">
+        <i class="fas fa-industry me-2"></i>MONBLEU – Maquila
+    </span>
+    <div class="d-flex gap-2">
+        <a href="/" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-home me-1"></i>Book Stock
+        </a>
+        <a href="/logout" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-sign-out-alt me-1"></i>Salir
+        </a>
     </div>
 </nav>
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, msg in messages %}
+            <div class="alert alert-{{ category }} d-flex align-items-center mb-3" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <div>{{ msg }}</div>
+            </div>
+        {% endfor %}
+    {% endwith %}
 
-    <h4 class="mb-3">🏭 Registrar productos enviados</h4>
+    <h2 class="section-title">
+        <i class="fas fa-arrow-up me-2"></i>Registrar Entradas de Stock
+    </h2>
 
-    <!-- 🔍 BUSCADOR (IGUAL AL DE STOCK) -->
-    <input
-        type="text"
-        id="buscador-stock"
-        class="form-control mb-3"
-        placeholder="Buscar por producto o talla..."
-    >
+    <div class="alert alert-success d-flex align-items-center mb-4">
+        <i class="fas fa-check-circle me-2"></i>
+        <div>Ingrese la cantidad de productos producidos que ingresan al almacén</div>
+    </div>
 
-    <form method="post">
-        <table class="table table-bordered table-sm align-middle" id="tabla-stock">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th>Producto</th>
-                    <th>Talla</th>
-                    <th>Stock</th>
-                    <th>Orden pendiente</th>
-                    <th>Envío</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in data %}
-                <tr class="text-center fila-click">
-                    
-                    <td class="text-start fw-semibold">{{ i.producto }}</td>
-                    <td>{{ i.talla }}</td>
-                    <td class="fw-bold {{ color_stock(i.stock, i.minimos, i.en_produccion) }}">
-                        {{ i.stock }}
-                    </td>
-                    <td class="fw-bold {% if i.en_produccion > 0 %}text-warning{% endif %}">
-                        {{ i.en_produccion }}
-                    </td>
-                    <td>
-                        <input
-                            type="number"
-                            name="envio_{{ i.id }}"
-                            class="form-control form-control-sm text-center"
-                            min="0"
-                            max="{{ i.en_produccion }}"
-                            placeholder="0">
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="row g-3">
+        {% for i in data %}
+        <div class="col-md-6 col-lg-4">
+            <form method="post" class="form-card">
+                <input type="hidden" name="id" value="{{ i.id }}">
+                
+                <div class="mb-3">
+                    <h5 class="mb-2">
+                        <i class="fas fa-tag me-2" style="color: #56ab2f;"></i>{{ i.producto }}
+                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary">Talla: {{ i.talla }}</span>
+                        <span class="badge bg-primary">Stock Actual: {{ i.stock }}</span>
+                    </div>
+                </div>
 
-        <button class="btn btn-success">
-            📦 Registrar envíos
-        </button>
-    </form>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-plus-circle me-1"></i>Cantidad Producida
+                    </label>
+                    <input name="cantidad" type="number" class="form-control" 
+                           placeholder="0" min="1" required>
+                </div>
 
-    <hr class="my-4">
-
-    <h4 class="mb-3">📄 Órdenes de compra – Maquila</h4>
-
-    <table class="table table-sm table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th>Abonado</th>
-                <th>Saldo</th>
-                <th>PDF</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for o in ordenes %}
-            <tr>
-                <td>{{ o.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
-                <td>${{ "%.2f"|format(o.total) }}</td>
-                <td>${{ "%.2f"|format(o.abonado) }}</td>
-                <td class="fw-bold text-danger">${{ "%.2f"|format(o.saldo) }}</td>
-                <td>
-                    {% if o.pdf %}
-                        <a href="/pdf/{{ o.pdf }}" target="_blank">📄 Ver</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+                <button class="btn btn-success w-100" type="submit">
+                    <i class="fas fa-arrow-up me-2"></i>Registrar Entrada
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
 </div>
-
-<!-- 🔎 BUSCADOR EN TIEMPO REAL -->
-<script>
-document.getElementById('buscador-stock').addEventListener('keyup', function () {
-    const texto = this.value.toLowerCase();
-    const filas = document.querySelectorAll('#tabla-stock tbody tr');
-
-    filas.forEach(fila => {
-        fila.style.display = fila.innerText.toLowerCase().includes(texto)
-            ? ''
-            : 'none';
-    });
-});
-</script>
-
-<!-- ✅ SCRIPT DE HOVER / SELECCIÓN (TUYO, INTACTO) -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-
-    document.querySelectorAll('.fila-click').forEach(fila => {
-
-        fila.style.cursor = 'pointer';
-        const celdas = fila.querySelectorAll('td');
-
-        fila.addEventListener('mouseenter', () => {
-            if (fila.dataset.sel !== '1') {
-                celdas.forEach(td => {
-                    td.style.setProperty(
-                        'background-color',
-                        '#e3f2fd',
-                        'important'
-                    );
-                });
-            }
-        });
-
-        fila.addEventListener('mouseleave', () => {
-            if (fila.dataset.sel !== '1') {
-                celdas.forEach(td => td.style.backgroundColor = '');
-            }
-        });
-
-        fila.addEventListener('click', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            fila.dataset.sel === '1'
-                ? desmarcar(fila)
-                : marcar(fila);
-        });
-
-        const input = fila.querySelector('input[type="number"]');
-        if (input) {
-            input.addEventListener('input', () => {
-                parseInt(input.value) > 0
-                    ? marcar(fila)
-                    : desmarcar(fila);
-            });
-        }
-    });
-
-    function marcar(fila) {
-        fila.dataset.sel = '1';
-        fila.querySelectorAll('td').forEach(td => {
-            td.style.setProperty(
-                'background-color',
-                '#bbdefb',
-                'important'
-            );
-            td.style.textDecoration = 'underline';
-        });
-    }
-
-    function desmarcar(fila) {
-        fila.dataset.sel = '0';
-        fila.querySelectorAll('td').forEach(td => {
-            td.style.backgroundColor = '';
-            td.style.textDecoration = '';
-        });
-    }
-
-});
-</script>
 
 </body>
 </html>

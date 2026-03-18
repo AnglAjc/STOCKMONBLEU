@@ -2,85 +2,149 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Stock</title>
-
-    <!-- Bootstrap -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Stock | MONBLEU</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- CSS propio -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
 <nav class="navbar navbar-dark bg-dark px-3">
-    <span class="navbar-brand fw-bold">MONBLEU – Stock</span>
-    <div>
-        {% if session['rol'] == 'admin' %}
-            <a href="/admin" class="btn btn-outline-light btn-sm me-2">Admin</a>
-
-            <a href="/aumentar-minimos" class="btn btn-warning btn-sm me-2">
-                Aumentar mínimos
+    <span class="navbar-brand">
+        <i class="fas fa-boxes me-2"></i>MONBLEU – Book Stock
+    </span>
+    <div class="d-flex flex-wrap gap-2">
+        {% if session['rol'] == 'taller' %}
+            <a href="/taller" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-down me-1"></i>Taller
             </a>
         {% endif %}
         {% if session['rol'] == 'maquila' %}
-            <a href="/maquila" class="btn btn-outline-light btn-sm me-2">Maquila</a>
+            <a href="/maquila" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-up me-1"></i>Maquila
+            </a>
         {% endif %}
-        {% if session['rol'] == 'taller' %}
-            <a href="/taller" class="btn btn-outline-light btn-sm me-2">Taller</a>
+        {% if session['rol'] == 'admin' %}
+            <a href="/admin" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-cog me-1"></i>Admin
+            </a>
+            <a href="/aumentar-minimos" class="btn btn-warning btn-sm">
+                <i class="fas fa-plus-circle me-1"></i>Aumentar mínimos
+            </a>
         {% endif %}
-        <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
+        <a href="/logout" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-sign-out-alt me-1"></i>Salir
+        </a>
     </div>
 </nav>
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, msg in messages %}
+            <div class="alert alert-{{ category }} d-flex align-items-center mb-3" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <div>{{ msg }}</div>
+            </div>
+        {% endfor %}
+    {% endwith %}
 
-    <!-- 🔍 BUSCADOR EN TIEMPO REAL -->
-    <input
-        type="text"
-        id="buscador-stock"
-        class="form-control mb-3"
-        placeholder="Buscar por producto o talla..."
-    >
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title mb-0">
+            <i class="fas fa-warehouse me-2"></i>Inventario General
+        </h2>
+        <div class="d-flex gap-2">
+            <span class="info-badge">
+                <i class="fas fa-check-circle text-success me-1"></i>Stock OK
+            </span>
+            <span class="info-badge">
+                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Advertencia
+            </span>
+            <span class="info-badge">
+                <i class="fas fa-times-circle text-danger me-1"></i>Urgente
+            </span>
+        </div>
+    </div>
 
-    <!-- TABLA STOCK -->
-    <table class="table table-bordered table-sm align-middle" id="tabla-stock">
-        <thead class="table-dark text-center">
-            <tr>
-                <th>Producto</th>
-                <th>Talla</th>
-                <th>Stock</th>
-                <th>Mínimo</th>
-                <th>En producción</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div style="overflow-x: auto;">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th><i class="fas fa-tag me-2"></i>Producto</th>
+                    <th><i class="fas fa-ruler me-2"></i>Talla</th>
+                    <th><i class="fas fa-cubes me-2"></i>Stock</th>
+                    <th><i class="fas fa-chart-line me-2"></i>Mínimo</th>
+                    <th><i class="fas fa-shopping-cart me-2"></i>Orden de Compra</th>
+                    {% if session['rol'] == 'admin' %}
+                    <th><i class="fas fa-edit me-2"></i>Acción</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
             {% for i in data %}
-            <tr class="{{ color_stock(i.stock, i.minimos, i.en_produccion) }} text-center">
-                <td class="text-start fw-semibold">{{ i.producto }}</td>
-                <td>{{ i.talla }}</td>
-                <td class="fw-bold">{{ i.stock }}</td>
-                <td>{{ i.minimos }}</td>
-                <td>{{ i.en_produccion }}</td>
-            </tr>
+                {% if session['rol'] == 'admin' %}
+                <tr class="{{ color_stock(i.stock, i.minimos, i.orden_compra) }}">
+                    <form method="post" action="/book_stock/editar/{{ i.id }}">
+                        <td class="text-start">
+                            <strong>{{ i.producto }}</strong>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">{{ i.talla }}</span>
+                        </td>
+                        <td class="text-center">
+                            <input type="number" name="stock" value="{{ i.stock }}" 
+                                   class="form-control form-control-sm text-center stock-value" 
+                                   style="max-width: 80px; margin: auto;" required>
+                        </td>
+                        <td class="text-center">
+                            <input type="number" name="minimos" value="{{ i.minimos }}" 
+                                   class="form-control form-control-sm text-center" 
+                                   style="max-width: 80px; margin: auto;" required>
+                        </td>
+                        <td class="text-center">
+                            <input type="number" name="orden_compra" value="{{ i.orden_compra }}" 
+                                   class="form-control form-control-sm text-center" 
+                                   style="max-width: 80px; margin: auto;" required>
+                        </td>
+                        <td class="text-center">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </td>
+                    </form>
+                </tr>
+                {% else %}
+                <tr class="{{ color_stock(i.stock, i.minimos, i.orden_compra) }} text-center">
+                    <td class="text-start">
+                        <strong>{{ i.producto }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">{{ i.talla }}</span>
+                    </td>
+                    <td>
+                        <span class="stock-value">{{ i.stock }}</span>
+                    </td>
+                    <td>{{ i.minimos }}</td>
+                    <td>
+                        {% if i.minimos is not none and i.stock < i.minimos %}
+                            <span class="badge bg-danger pulse-animation">
+                                <i class="fas fa-exclamation-triangle me-1"></i>{{ i.orden_compra }}
+                            </span>
+                        {% else %}
+                            <span class="text-success">
+                                <i class="fas fa-check-circle me-1"></i>Aún no
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
             {% endfor %}
-        </tbody>
-    </table>
-
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<!-- 🔎 SCRIPT BUSCADOR -->
-<script>
-document.getElementById('buscador-stock').addEventListener('keyup', function () {
-    const texto = this.value.toLowerCase();
-    const filas = document.querySelectorAll('#tabla-stock tbody tr');
-
-    filas.forEach(fila => {
-        fila.style.display = fila.innerText.toLowerCase().includes(texto)
-            ? ''
-            : 'none';
-    });
-});
-</script>
 
 </body>
 </html>
