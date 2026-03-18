@@ -1,47 +1,52 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --bg-main: #f0f2f5;
-    --navy-blue: #1c1c1c; /* Monbleu Signature Color */
-    --navy-light: #162a45;
-    --accent: #3b82f6;
-    --accent-hover: #2563eb;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --card-bg: rgba(255, 255, 255, 0.85); /* Glassmorphism base */
-    --card-border: rgba(255, 255, 255, 0.5);
+    --bg-main: #fafafa;
+    --navy-blue: #2a2a2a; /* Soft Pastel Black */
+    --navy-light: #444444; /* Dark Gray */
+    --accent: #6b6b6b; /* Soft Gray Accent */
+    --accent-hover: #111111; /* Dark Hover */
+    --text-primary: #1a1a1a;
+    --text-secondary: #737373;
+    --card-bg: rgba(255, 255, 255, 0.92);
+    --card-border: rgba(230, 230, 230, 0.8);
     
-    /* Status Colors */
-    --status-green: #dcfce7;
-    --status-green-border: #bbf7d0;
+    /* Status Colors - Softened for B&W minimalist theme */
+    --status-green: #f0fdf4;
+    --status-green-border: #dcfce7;
     --status-green-text: #166534;
 
-    --status-yellow: #fef08a;
-    --status-yellow-border: #fde047;
+    --status-yellow: #fefce8;
+    --status-yellow-border: #fef08a;
     --status-yellow-text: #854d0e;
 
-    --status-red: #fee2e2;
-    --status-red-border: #fca5a5;
+    --status-red: #fef2f2;
+    --status-red-border: #fecaca;
     --status-red-text: #991b1b;
     
-    --status-blue: #e0f2fe;
-    --status-blue-border: #bae6fd;
-    --status-blue-text: #075985;
+    --status-blue: #f8fafc;
+    --status-blue-border: #e2e8f0;
+    --status-blue-text: #334155;
 }
 
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-main);
-    background-image: 
-        radial-gradient(at 0% 0%, hsla(217,100%,76%,0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(217,100%,76%,0.15) 0px, transparent 50%);
+    background-image:
+        radial-gradient(at 0% 0%, hsla(217, 100%, 76%, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(217, 100%, 76%, 0.15) 0px, transparent 50%);
     background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
 }
 
 /* ================== TYPOGRAPHY ================== */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     color: var(--navy-blue);
     font-weight: 700;
     letter-spacing: -0.02em;
@@ -66,7 +71,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-outline-light {
     border-radius: 8px;
-    border-color: rgba(255,255,255,0.3);
+    border-color: rgba(255, 255, 255, 0.3);
     transition: all 0.2s ease;
 }
 
@@ -89,7 +94,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ================== INPUTS & FORMS ================== */
-.form-control, .form-select {
+.form-control,
+.form-select {
     border-radius: 8px;
     border: 1px solid #cbd5e1;
     padding: 0.6rem 1rem;
@@ -98,7 +104,8 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
     border-color: var(--accent);
     outline: none;
@@ -172,7 +179,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .table tbody tr:hover td {
-    background-color: rgba(255,255,255,0.4) !important;
+    background-color: rgba(255, 255, 255, 0.4) !important;
     mix-blend-mode: multiply;
 }
 
@@ -183,30 +190,49 @@ h1, h2, h3, h4, h5, h6 {
     background-color: var(--status-green) !important;
     color: var(--status-green-text);
 }
-.table-success td { border-color: var(--status-green-border); }
+
+.table-success td {
+    border-color: var(--status-green-border);
+}
 
 .table-warning {
     background-color: var(--status-yellow) !important;
     color: var(--status-yellow-text);
 }
-.table-warning td { border-color: var(--status-yellow-border); }
+
+.table-warning td {
+    border-color: var(--status-yellow-border);
+}
 
 .table-danger {
     background-color: var(--status-red) !important;
     color: var(--status-red-text);
 }
-.table-danger td { border-color: var(--status-red-border); }
+
+.table-danger td {
+    border-color: var(--status-red-border);
+}
 
 .table-info {
     background-color: var(--status-blue) !important;
     color: var(--status-blue-text);
 }
-.table-info td { border-color: var(--status-blue-border); }
+
+.table-info td {
+    border-color: var(--status-blue-border);
+}
 
 /* ================== ANIMATIONS ================== */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .container {
@@ -222,7 +248,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .login-aside {
     flex: 1;
-    background: linear-gradient(135deg, var(--navy-blue) 0%, #162a45 100%);
+    background: linear-gradient(135deg, var(--navy-blue) 0%, var(--navy-light) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -236,7 +262,7 @@ h1, h2, h3, h4, h5, h6 {
     position: absolute;
     width: 150%;
     height: 150%;
-    background: radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+    background: radial-gradient(circle at 80% 20%, rgba(200, 200, 200, 0.15) 0%, transparent 50%);
     top: -25%;
     left: -25%;
 }
@@ -329,12 +355,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 991px) {
-    .login-container { flex-direction: column; }
-    .login-aside { display: none; }
-    .login-main { background: #f8fafc; }
-    .login-card { 
-        background: white; 
-        border-radius: 24px; 
+    .login-container {
+        flex-direction: column;
+    }
+
+    .login-aside {
+        display: none;
+    }
+
+    .login-main {
+        background: #f8fafc;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 24px;
         padding: 2.5rem;
         box-shadow: 0 20px 40px -10px rgba(11, 25, 44, 0.1);
         margin: 1rem;

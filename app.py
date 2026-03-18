@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 import os
+import io
 
 # ================== CONFIG ==================
 app = Flask(__name__)
@@ -127,41 +128,7 @@ def maquila_por_categoria(cat):
         return 'A'
     return 'B'
 
-def generar_pdf_orden(orden, detalles):
-    filename = f'orden_{orden.id}.pdf'
-    path = os.path.join(app.config['PDF_FOLDER'], filename)
-
-    doc = SimpleDocTemplate(path, pagesize=A4)
-    styles = getSampleStyleSheet()
-    elements = []
-
-    elements.append(Paragraph(f"Orden de Compra – Maquila {orden.maquila}", styles['Title']))
-    elements.append(Paragraph(f"Fecha: {orden.fecha.strftime('%Y-%m-%d')}", styles['Normal']))
-
-    data = [['Producto', 'Talla', 'Cantidad', 'Precio', 'Subtotal']]
-    for d in detalles:
-        data.append([
-            d.producto,
-            d.talla,
-            d.cantidad,
-            f"${d.precio_unitario:.2f}",
-            f"${d.subtotal:.2f}"
-        ])
-
-    data.append(['', '', '', 'TOTAL', f"${orden.total:.2f}"])
-    data.append(['', '', '', 'ABONADO', f"${orden.abonado:.2f}"])
-    data.append(['', '', '', 'SALDO',
-                 'PAGADO' if orden.saldo <= 0 else f"${orden.saldo:.2f}"])
-
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.orange),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
-    ]))
-
-    elements.append(table)
-    doc.build(elements)
-    return filename
+# La función generar_pdf_orden fue removida, el PDF ahora se genera en la ruta dinámica.
 
 # ================== CONTEXT ==================
 @app.context_processor
@@ -289,7 +256,7 @@ def admin():
         for d in detalles:
             db.session.add(d)
 
-        orden.pdf = generar_pdf_orden(orden, detalles)
+        # El PDF se generará dinámicamente cuando el usuario haga clic en 'Ver'.
         db.session.commit()
 
     query = BookStock.query
@@ -314,10 +281,73 @@ def admin():
     )
 
 
-@app.route('/pdf/<nombre>')
+@app.route('/aumentar-minimos', methods=['GET', 'POST'])
 @login_required
-def ver_pdf(nombre):
-    return send_file(os.path.join(app.config['PDF_FOLDER'], nombre))
+@rol_required('admin')
+def aumentar_minimos():
+    if request.method == 'POST':
+        for key, val in request.form.items():
+            if key.startswith('minimo_') and val.strip():
+                try:
+                    item_id = int(key.split('_')[1])
+                    nuevo_minimo = int(val)
+                    item = BookStock.query.get(item_id)
+                    if item:
+                        item.minimos = nuevo_minimo
+                except ValueError:
+                    pass
+        db.session.commit()
+        flash('Mínimos actualizados correctamente en toda la base de datos.', 'success')
+        return redirect(url_for('aumentar_minimos'))
+        
+    data = BookStock.query.order_by(BookStock.categoria, BookStock.producto, orden_tallas).all()
+    return render_template('aumentar_minimos.html', data=data)
+
+@app.route('/pdf/<int:orden_id>')
+@login_required
+def ver_pdf(orden_id):
+    orden = OrdenCompra.query.get_or_404(orden_id)
+    detalles = OrdenDetalle.query.filter_by(orden_id=orden.id).all()
+    
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph(f"Orden de Compra – Maquila {orden.maquila}", styles['Title']))
+    elements.append(Paragraph(f"Fecha: {orden.fecha.strftime('%Y-%m-%d')}", styles['Normal']))
+
+    data = [['Producto', 'Talla', 'Cantidad', 'Precio', 'Subtotal']]
+    for d in detalles:
+        data.append([
+            d.producto,
+            d.talla,
+            d.cantidad,
+            f"${d.precio_unitario:.2f}",
+            f"${d.subtotal:.2f}"
+        ])
+
+    data.append(['', '', '', 'TOTAL', f"${orden.total:.2f}"])
+    data.append(['', '', '', 'ABONADO', f"${orden.abonado:.2f}"])
+    data.append(['', '', '', 'SALDO',
+                 'PAGADO' if orden.saldo <= 0 else f"${orden.saldo:.2f}"])
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.orange),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+    
+    buffer.seek(0)
+    return send_file(
+        buffer, 
+        as_attachment=False, 
+        download_name=f'orden_{orden.id}.pdf', 
+        mimetype='application/pdf'
+    )
 
 
 
