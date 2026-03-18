@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Taller</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
@@ -16,110 +16,124 @@
     </div>
 </nav>
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
 
     {% if estado %}
-        <div class="alert alert-info">
+        <div class="alert alert-info shadow-sm rounded-3">
             <strong>📌 Último pedido atendido:</strong> {{ estado.ultimo_pedido }}
         </div>
     {% endif %}
 
     <!-- FILTRO MAQUILA -->
-    <div class="mb-3">
-        <a href="?maquila=A"
-           class="btn btn-sm {{ 'btn-primary' if maquila_filtro == 'A' else 'btn-outline-primary' }}">
-            Maquila A
-        </a>
-        <a href="?maquila=B"
-           class="btn btn-sm {{ 'btn-primary' if maquila_filtro == 'B' else 'btn-outline-primary' }}">
-            Maquila B
-        </a>
+    <div class="mb-4 text-center">
+        <div class="btn-group shadow-sm">
+            <a href="?maquila=A"
+               class="btn px-4 {{ 'btn-primary' if maquila_filtro == 'A' else 'btn-light' }}">
+                Maquila A
+            </a>
+            <a href="?maquila=B"
+               class="btn px-4 {{ 'btn-primary' if maquila_filtro == 'B' else 'btn-light' }}">
+                Maquila B
+            </a>
+        </div>
     </div>
 
     <form method="post">
 
         <!-- ÚLTIMO PEDIDO -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <label class="fw-semibold">📌 Último pedido atendido</label>
+        <div class="glass-panel mb-4 shadow-sm border-0">
+            <div class="p-2">
+                <label class="fw-bold mb-2">📌 Actualizar último pedido atendido</label>
                 <input
                     type="text"
                     name="ultimo_pedido"
-                    class="form-control"
+                    class="form-control form-control-lg bg-white"
                     placeholder="OC-145 / Pedido especial"
                 >
             </div>
         </div>
 
-        <!-- ================= SALIDAS ================= -->
-        <h4 class="mb-2">🛠 Salidas de Taller</h4>
+        <div class="row g-4">
+            <!-- ================= SALIDAS ================= -->
+            <div class="col-lg-6">
+                <div class="glass-panel h-100 border-top border-danger border-4">
+                    <h5 class="mb-3 text-danger fw-bold">🛠 Salidas de Taller</h5>
 
-        <input
-            type="text"
-            id="buscador-salidas"
-            class="form-control mb-3"
-            placeholder="Buscar en salidas..."
-        >
+                    <div class="input-group mb-3 shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-white border-end-0">🔍</span>
+                        <input type="text" id="buscador-salidas" class="form-control border-start-0 ps-0" placeholder="Buscar producto...">
+                    </div>
 
-        <table class="table table-bordered table-sm align-middle" id="tabla-salidas">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th>Producto</th>
-                    <th>Talla</th>
-                    <th>Stock</th>
-                    <th>Salida</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in data %}
-                <tr>
-                    <td class="fw-semibold">{{ i.producto }}</td>
-                    <td>{{ i.talla }}</td>
-                    <td class="fw-bold">{{ i.stock }}</td>
-                    <td>
-                        <input type="number" name="salida_{{ i.id }}" class="form-control form-control-sm text-center" min="0">
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-bordered table-sm align-middle" id="tabla-salidas">
+                            <thead class="table-dark text-center sticky-top">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Talla</th>
+                                    <th>Stock</th>
+                                    <th>Salida</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in data %}
+                                <tr class="text-center">
+                                    <td class="text-start fw-semibold ps-2" style="font-size:0.9rem;">{{ i.producto }}</td>
+                                    <td>{{ i.talla }}</td>
+                                    <td class="fw-bold">{{ i.stock }}</td>
+                                    <td style="width: 100px;">
+                                        <input type="number" name="salida_{{ i.id }}" class="form-control form-control-sm text-center shadow-sm" min="0">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-        <!-- ================= ENTRADAS ================= -->
-        <h4 class="mb-2 mt-4">📥 Entradas a Taller</h4>
+            <!-- ================= ENTRADAS ================= -->
+            <div class="col-lg-6">
+                <div class="glass-panel h-100 border-top border-success border-4">
+                    <h5 class="mb-3 text-success fw-bold">📥 Entradas a Taller</h5>
 
-        <input
-            type="text"
-            id="buscador-entradas"
-            class="form-control mb-3"
-            placeholder="Buscar en entradas..."
-        >
+                    <div class="input-group mb-3 shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-white border-end-0">🔍</span>
+                        <input type="text" id="buscador-entradas" class="form-control border-start-0 ps-0" placeholder="Buscar producto...">
+                    </div>
 
-        <table class="table table-bordered table-sm align-middle" id="tabla-entradas">
-            <thead class="table-success text-center">
-                <tr>
-                    <th>Producto</th>
-                    <th>Talla</th>
-                    <th>Stock</th>
-                    <th>Entrada</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in data %}
-                <tr>
-                    <td class="fw-semibold">{{ i.producto }}</td>
-                    <td>{{ i.talla }}</td>
-                    <td class="fw-bold">{{ i.stock }}</td>
-                    <td>
-                        <input type="number" name="entrada_{{ i.id }}" class="form-control form-control-sm text-center" min="0">
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-bordered table-sm align-middle" id="tabla-entradas">
+                            <thead class="table-success text-center sticky-top">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Talla</th>
+                                    <th>Stock</th>
+                                    <th>Entrada</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in data %}
+                                <tr class="text-center">
+                                    <td class="text-start fw-semibold ps-2" style="font-size:0.9rem;">{{ i.producto }}</td>
+                                    <td>{{ i.talla }}</td>
+                                    <td class="fw-bold">{{ i.stock }}</td>
+                                    <td style="width: 100px;">
+                                        <input type="number" name="entrada_{{ i.id }}" class="form-control form-control-sm text-center shadow-sm" min="0">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <button class="btn btn-success mt-3">
-            💾 Guardar movimientos
-        </button>
+        <div class="text-center mt-5">
+            <button class="btn btn-primary btn-lg px-5 fw-bold shadow">
+                💾 Guardar movimientos masivos
+            </button>
+        </div>
 
     </form>
 </div>
